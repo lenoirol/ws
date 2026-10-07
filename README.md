@@ -20,10 +20,6 @@ Type or paste a word list, pick a style, and get a clean printable sheet with a 
 - **Print** straight from the app with exact page sizing.
 - On phones and tablets, send the result through the system share sheet.
 
-## Design
-
-The interface follows Apple's Liquid Glass look: floating translucent panels with refraction at the edges, glass that adapts to what is behind it, a clear variant, and menus that grow out of their buttons. It works in light and dark mode, respects reduced motion and reduced transparency settings, and adapts from desktop to phone.
-
 ## Privacy
 
 Your word lists and settings live only in memory and disappear when you close the tab. The app stores nothing in the browser. Once loaded, it also works offline.
