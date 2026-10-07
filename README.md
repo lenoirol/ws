@@ -19,7 +19,3 @@ Type or paste a word list, pick a style, and get a clean printable sheet with a 
 - Save as **PNG** (150, 300 or 600 DPI), or as a crisp vector **PDF**.
 - **Print** straight from the app with exact page sizing.
 - On phones and tablets, send the result through the system share sheet.
-
-## Privacy
-
-Your word lists and settings live only in memory and disappear when you close the tab. The app stores nothing in the browser. Once loaded, it also works offline.
