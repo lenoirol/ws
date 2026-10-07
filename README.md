@@ -1,4 +1,4 @@
-# WS by PHN
+# WS by Phu Huy Nguyen
 
 Make classroom-ready **Word Search** and **Word Scramble** worksheets in your browser.
 
@@ -27,20 +27,3 @@ The interface follows Apple's Liquid Glass look: floating translucent panels wit
 ## Privacy
 
 Your word lists and settings live only in memory and disappear when you close the tab. The app stores nothing in the browser. Once loaded, it also works offline.
-
-## Run it locally
-
-```sh
-npm ci
-npm run dev
-```
-
-Open the address Vite prints, `http://localhost:5173/` by default. To build a static site you can host anywhere:
-
-```sh
-npm run build
-```
-
-Run the test suite with `npm test`.
-
-Built with React, TypeScript, Vite, pdf-lib and fflate.
