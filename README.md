@@ -1,36 +1,46 @@
 # WS by PHN
 
-Ứng dụng web tạo **Word Search** và **Word Scramble**, xem trước đề/đáp án, lưu PNG/PDF, in và chia sẻ. Giao diện hỗ trợ chế độ sáng/tối và vật liệu Liquid Glass.
+Make classroom-ready **Word Search** and **Word Scramble** worksheets in your browser.
 
-Ứng dụng chạy trên trình duyệt, không cần backend hoặc tài khoản. Danh sách từ và các tùy chọn chỉ nằm trong bộ nhớ; tải lại trang sẽ xóa dữ liệu đã nhập. Bản production hỗ trợ sử dụng offline sau khi tải lần đầu.
+Type or paste a word list, pick a style, and get a clean printable sheet with a matching answer key in seconds. Everything runs on your device: no account, no server, nothing uploaded.
 
-## Chạy trên máy
+## What you can do
+
+- **Word Search**: automatic or custom grid sizes from 5×5 up to 100×100, rows and columns set independently. Choose which of the eight directions words may use, from "easy" (across and down) to "hard" (all eight), with crossing words and filler-letter options.
+- **Word Scramble**: every word is scrambled on its own and never comes out unchanged. Keep or change the first letter, and reveal starter letters in the blanks.
+- **Clues**: add a clue after any word (`word | clue`, or paste two columns from a spreadsheet) and show words, clues, or both.
+- **Answer keys**: circled words with a dot on the first letter for Word Search, filled-in blanks for Word Scramble.
+- **Many copies at once**: generate up to 50 different puzzles in one go, each with its own seed, so every student gets a different sheet.
+- **Repeatable results**: every puzzle has a seed, so the same words and seed always give the same sheet.
+- **Your page, your way**: title, name line, footer, A4, Letter or A3 in portrait or landscape.
+
+## Export and share
+
+- Save as **PNG** (150, 300 or 600 DPI), or as a crisp vector **PDF**.
+- **Print** straight from the app with exact page sizing.
+- On phones and tablets, send the result through the system share sheet.
+
+## Design
+
+The interface follows Apple's Liquid Glass look: floating translucent panels with refraction at the edges, glass that adapts to what is behind it, a clear variant, and menus that grow out of their buttons. It works in light and dark mode, respects reduced motion and reduced transparency settings, and adapts from desktop to phone.
+
+## Privacy
+
+Your word lists and settings live only in memory and disappear when you close the tab. The app stores nothing in the browser. Once loaded, it also works offline.
+
+## Run it locally
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Mở địa chỉ do Vite hiển thị, mặc định là `http://localhost:5173/`.
-
-## Kiểm tra và build
+Open the address Vite prints, `http://localhost:5173/` by default. To build a static site you can host anywhere:
 
 ```sh
-npm test
 npm run build
-npm run preview
 ```
 
-Build tạo thư mục `dist/`, có thể triển khai lên dịch vụ hosting tĩnh.
+Run the test suite with `npm test`.
 
-## Cấu trúc
-
-- `src/core/`: xử lý từ, sinh lưới và xáo chữ theo seed.
-- `src/layout/`, `src/render/`: bố cục và vẽ trang.
-- `src/export/`: PNG, PDF, in và chia sẻ.
-- `src/ui/`: giao diện và hiệu ứng kính.
-- `src/workers/`: sinh lưới bằng Web Worker.
-- `tests/`: kiểm thử thuật toán, bố cục và xuất file.
-- `reference/`: tài liệu và các mẫu đối chiếu.
-
-Công nghệ: React, TypeScript, Vite, Vitest, pdf-lib và fflate.
+Built with React, TypeScript, Vite, pdf-lib and fflate.
