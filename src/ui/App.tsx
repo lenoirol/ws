@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { loadProject, saveProject } from '../account/projects.ts';
+import { fromSaved, toSaved } from '../account/projectState.ts';
 import { track } from '../account/sessionLog.ts';
 import { useAccount } from '../account/useAccount.ts';
 import { APP_NAME, MAX_WORDS } from '../core/constants.ts';
@@ -12,6 +14,8 @@ import { Group, Segmented } from './panels/Fields.tsx';
 import { ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
 import { AccountMenu } from './panels/AccountMenu.tsx';
 import { AuthDialog } from './panels/AuthDialog.tsx';
+import { ProjectPanel, type SaveStatus } from './panels/ProjectPanel.tsx';
+import { ProjectsDialog } from './panels/ProjectsDialog.tsx';
 import { AppearanceMenu } from './panels/Menu.tsx';
 import { Preview } from './panels/Preview.tsx';
 import { Slider } from './panels/Fields.tsx';
@@ -58,9 +62,63 @@ export function App() {
   const [view, setView] = useState<'input' | 'preview'>('input');
   const account = useAccount();
   const [authOpen, setAuthOpen] = useState(false);
+  const [projectsOpen, setProjectsOpen] = useState(false);
+  const [projectId, setProjectId] = useState<string | null>(null);
+  const [projectName, setProjectName] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>(null);
+  /** What the guest asked for before being sent to sign in; it runs as soon as they are in. */
+  const [pending, setPending] = useState<'save' | 'projects' | null>(null);
   const set = (patch: Partial<AppState>) => setS((prev) => ({ ...prev, ...patch }));
   const switchTab = (tab: AppState['tab']) => withViewTransition(() => set({ tab }));
   const view$ = usePuzzle(s);
+
+  const doSave = async () => {
+    if (!account.user) return;
+    setSaving(true);
+    setSaveStatus(null);
+    try {
+      const name = projectName.trim() || s.title.trim() || t('untitled');
+      const id = await saveProject({ id: projectId, ownerId: account.user.id, name, type: s.tab, state: toSaved(s) });
+      setProjectId(id);
+      setProjectName(name);
+      setSaveStatus({ level: 'info', text: t('savedOk') });
+    } catch (e) {
+      setSaveStatus({ level: 'warn', text: t('error', { m: (e as Error).message }) });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const ask = (what: 'save' | 'projects') => {
+    if (!account.user) {
+      setPending(what);
+      setAuthOpen(true);
+    } else if (what === 'save') void doSave();
+    else setProjectsOpen(true);
+  };
+
+  useEffect(() => {
+    if (!pending || !account.user) return;
+    setPending(null);
+    if (pending === 'save') void doSave();
+    else setProjectsOpen(true);
+  }, [pending, account.user]);
+
+  useEffect(() => {
+    // A different account (or none) must not keep pointing at someone else's project.
+    setProjectId(null);
+    setSaveStatus(null);
+  }, [account.user?.id]);
+
+  const openProject = async (id: string) => {
+    const p = await loadProject(id);
+    setS((prev) => fromSaved(p.state, prev));
+    setProjectId(id);
+    setProjectName(p.name);
+    setSaveStatus(null);
+    setProjectsOpen(false);
+  };
 
   useEffect(() => {
     // Changing the compact view changes the backdrop without scrolling it.
@@ -116,6 +174,9 @@ export function App() {
         </header>
         <div className="sidebar-scroll">
           <Segmented<AppState['tab']> kind="tab" className="fill" label={APP_NAME} value={s.tab} onChange={switchTab} options={[{ value: 'ws', label: t('tabWordSearch') }, { value: 'scramble', label: t('tabScramble') }]} />
+          {account.enabled && (
+            <ProjectPanel name={projectName} setName={setProjectName} saving={saving} status={saveStatus} signedIn={account.user !== null} onSave={() => ask('save')} onOpenList={() => ask('projects')} />
+          )}
           <Group title={t('words')}>
             <div className="row row-wide">
               <textarea className="words" value={s.text} placeholder={t('wordsHint')} spellCheck={false} onChange={(e) => set({ text: e.target.value })} aria-label={t('words')} />
@@ -150,7 +211,8 @@ export function App() {
         <Segmented<'input' | 'preview'> glass label="View" value={view} onChange={setView} options={[{ value: 'input', label: t('viewInput') }, { value: 'preview', label: t('viewPreview') }]} />
       </nav>
 
-      {(authOpen || account.recovering) && account.enabled && <AuthDialog account={account} onClose={() => setAuthOpen(false)} />}
+      {(authOpen || account.recovering) && account.enabled && <AuthDialog account={account} onClose={() => { setAuthOpen(false); if (!account.user) setPending(null); }} />}
+      {projectsOpen && account.user && <ProjectsDialog onClose={() => setProjectsOpen(false)} onOpen={openProject} />}
     </div>
   );
 }

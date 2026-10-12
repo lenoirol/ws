@@ -126,6 +126,17 @@ const en = {
   authEmail: 'Enter a valid email address.',
   authPasswordShort: 'Use at least {n} characters for the password.',
   authPasswordMismatch: 'The two passwords do not match.',
+  project: 'Project',
+  projectName: 'Name',
+  untitled: 'Untitled',
+  save: 'Save',
+  savedOk: 'Saved to your projects.',
+  myProjects: 'My Projects',
+  noProjects: 'No saved projects yet. Press Save to keep your current worksheet.',
+  loading: 'Loading…',
+  moveToTrash: 'Move to Trash',
+  moveToTrashN: 'Move {n} to Trash',
+  saveNeedsAccount: 'Saving needs an account. You will be asked to sign in.',
   error: 'Something went wrong: {m}',
 } as const;
 

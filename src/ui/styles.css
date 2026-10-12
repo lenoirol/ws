@@ -507,3 +507,15 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .auth-links { display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .auth-links button { border: 0; background: none; padding: 6px; font: inherit; font-size: 14px; cursor: pointer; color: var(--accent); }
 .auth-note { text-align: center; font-size: 12.5px; color: var(--label2); }
+
+/* ---------- Projects ---------- */
+.tool.soft { background: var(--fill); }
+.btn-row { gap: 10px; }
+.btn-row .tool { flex: 1; justify-content: center; }
+.auth-card.wide { width: min(100%, 520px); }
+.project-row { gap: 12px; padding-top: 4px; padding-bottom: 4px; }
+.project-check { flex: none; width: 20px; height: 20px; accent-color: var(--accent); cursor: pointer; }
+.project-main { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 6px 0; border: 0; background: none; text-align: left; font: inherit; color: var(--label); cursor: pointer; }
+.project-main:disabled { opacity: 0.6; cursor: wait; }
+.project-name { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.project-meta { font-size: 12.5px; color: var(--label2); }
