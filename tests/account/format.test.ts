@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { formatDuration, relativeTime } from '../../src/account/duration.ts';
-import { describeAgent } from '../../src/account/userAgent.ts';
+import { describeAgent, describeDevice } from '../../src/account/userAgent.ts';
 
 describe('formatDuration', () => {
   it('formats minutes and hours', () => {
@@ -41,5 +41,27 @@ describe('relativeTime', () => {
   });
   it('falls back to a date after a month', () => {
     expect(relativeTime(now - 45 * 86_400_000, now, 'en')).toMatch(/Aug \d+, 2026/);
+  });
+});
+
+describe('describeDevice', () => {
+  const cases: [string, string, string][] = [
+    ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', 'Safari on iPhone', 'phone'],
+    ['Mozilla/5.0 (iPad; CPU OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Mobile/15E148 Safari/604.1', 'Safari on iPad', 'tablet'],
+    ['Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Mobile Safari/537.36', 'Chrome on Android phone', 'phone'],
+    ['Mozilla/5.0 (Linux; Android 13; SM-X700) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36', 'Chrome on Android tablet', 'tablet'],
+    ['Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36 Edg/126.0.0.0', 'Edge on Windows PC', 'computer'],
+    ['Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36', 'Chrome on Mac', 'computer'],
+    ['Mozilla/5.0 (X11; Linux x86_64; rv:127.0) Gecko/20100101 Firefox/127.0', 'Firefox on Linux PC', 'computer'],
+    ['Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/126.0.0.0 Mobile/15E148 Safari/604.1', 'Chrome on iPhone', 'phone'],
+  ];
+  it.each(cases)('%s', (ua, label, kind) => {
+    const d = describeDevice(ua);
+    expect(d.label).toBe(label);
+    expect(d.kind).toBe(kind);
+  });
+  it('handles missing values', () => {
+    expect(describeDevice(null).kind).toBe('unknown');
+    expect(describeDevice('curl/8.4').label).toBe('Browser');
   });
 });

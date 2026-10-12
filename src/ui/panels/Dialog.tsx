@@ -14,7 +14,7 @@ const FOCUSABLE = 'button:not(:disabled), [href], input:not(:disabled), select, 
  * Shared shell: blurred backdrop, spring entrance, animated exit, Escape and backdrop-click to close,
  * focus kept inside and returned to the opener. On phones it becomes a bottom sheet (see styles).
  */
-export function Dialog({ title, onClose, size = 'sm', children }: { title: string; onClose: () => void; size?: 'sm' | 'md' | 'lg'; children: ReactNode }) {
+export function Dialog({ title, onClose, size = 'sm', children }: { title: string; onClose: () => void; size?: 'sm' | 'md' | 'lg' | 'xl'; children: ReactNode }) {
   const [closing, setClosing] = useState(false);
   const card = useRef<HTMLDivElement>(null);
   const opener = useRef<Element | null>(typeof document === 'undefined' ? null : document.activeElement);

@@ -55,7 +55,7 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
         const issue = checkCredentials(email, 'x'.repeat(MIN_PASSWORD));
         if (issue) return reject(issue);
         setBusy(true);
-        await account.sendReset(email);
+        await account.requestReset(email);
         setInfo(t('resetSent'));
         return;
       }
@@ -83,7 +83,8 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
 
   return (
     <Dialog title={title} onClose={() => { if (recovering) account.endRecovery(); onClose(); }}>
-      <CloseWhen when={account.user !== null && !recovering} />
+      {/* Wait for the profile: an account an admin reset must go on to choose a new password, not close. */}
+      <CloseWhen when={account.user !== null && account.profileReady && !recovering} />
       <form className="auth-form" onSubmit={(e) => void submit(e)} noValidate>
         {!recovering && mode !== 'forgot' && (
           <Segmented<Mode> kind="tab" className="fill" label={t('account')} value={mode} onChange={go}
@@ -91,6 +92,7 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
         )}
 
         {mode === 'forgot' && !recovering && <p className="dlg-sub">{t('resetIntro')}</p>}
+        {recovering && account.mustChangePassword && <Banner kind="info" icon="shield">{t('forcedChange')}</Banner>}
 
         {/* keyed by mode so the fields ease in again when the form changes */}
         <div className="fields" key={recovering ? 'recovery' : mode}>
@@ -111,7 +113,7 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
         )}
 
         {error && <Banner kind="error">{error}</Banner>}
-        {info && <Banner kind="ok" icon="mail">{info}</Banner>}
+        {info && <Banner kind="ok" icon="check">{info}</Banner>}
 
         <button type="submit" className="btn primary block" disabled={busy}>
           {busy && <Spinner />}

@@ -29,6 +29,14 @@ Each visit, signed in or not, records one usage row: when it started, the browse
 
 Signed-in users can save the current worksheet, reopen it from **My Projects**, and move several projects to the trash at once. The trash keeps them until you restore them or delete them for good.
 
-Administrators get an **Admin** entry in the account menu with the visit log (guests and signed-in users, duration, browser, export counts) and the account list, where roles can be changed. Only administrators can read this data; the database enforces it.
+**Forgot password** does not send an email. The request goes to the administrators, and an approval sets the default password (`123456`), signs the person out everywhere and asks them to choose a new password at the next sign-in.
+
+Administrators get an **Admin** entry in the account menu (with a badge when requests are waiting):
+
+- **Users**: search every account, see the last visit and device, open a person's page to edit their name, email and role, browse their saved projects (never their trash) and open any of them as a copy.
+- **Requests**: approve or dismiss password requests.
+- **Activity**: every visit, guests included, with the exact date and time, the device (for example Safari on iPhone) and what was exported.
+
+Passwords are never visible to anyone. The database enforces all of this, not just the screen.
 
 Local development with accounts: see [supabase/README.md](supabase/README.md).

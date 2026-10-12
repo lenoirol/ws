@@ -517,12 +517,14 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .dlg-backdrop[data-state='closing'] .dlg-card { animation: dlg-out 0.17s var(--ease) both; }
 .dlg-md { width: min(100%, 520px); }
 .dlg-lg { width: min(100%, 680px); }
+.dlg-xl { width: min(100%, 860px); }
 .dlg-head { flex: none; display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 10px 24px; }
 .dlg-head h2 { font-size: 21px; font-weight: 700; letter-spacing: 0.1px; }
 .dlg-x { width: 34px; height: 34px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--label2); background: var(--fill); transition: background-color 0.2s var(--ease), color 0.2s var(--ease), transform 0.35s var(--spring); }
 .dlg-x:hover { background: var(--fill2); color: var(--label); }
 .dlg-x:active { transform: scale(0.88); }
 .dlg-body { display: flex; flex-direction: column; gap: 14px; padding: 6px 20px 22px; min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+.dlg-body > * { flex-shrink: 0; }
 .dlg-sub { padding: 0 4px; font-size: 14px; line-height: 1.4; color: var(--label2); }
 .dlg-note { text-align: center; font-size: 12.5px; line-height: 1.4; color: var(--label2); }
 @keyframes dlg-fade { from { opacity: 0; } }
@@ -663,3 +665,31 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 
 /* Four puzzle modes share the sidebar width, so the labels get a little less padding. */
 .seg.compact button { padding: 0 6px; font-size: 13.5px; }
+
+/* ---------- Admin console ---------- */
+.stat.hot { background: color-mix(in srgb, var(--orange) 18%, transparent); }
+.stat.hot .stat-value { color: var(--orange); }
+.sec-title { margin-top: 6px; padding: 0 4px; font-size: 13px; font-weight: 700; letter-spacing: 0.2px; text-transform: uppercase; color: var(--label2); }
+.search { padding-left: 14px; gap: 8px; color: var(--label2); }
+.search input { height: 46px; padding: 0; }
+.user-btn { width: 100%; border: 0; background: none; text-align: left; font: inherit; color: var(--label); cursor: pointer; align-items: center; }
+.user-btn:hover { background: var(--fill); }
+.user-side { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+.device { display: inline-flex; align-items: center; gap: 5px; vertical-align: bottom; }
+.device svg { flex: none; opacity: 0.75; }
+.back { align-self: flex-start; display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px 4px 2px; font-weight: 600; }
+.user-head { display: flex; align-items: center; gap: 14px; padding: 4px; }
+.user-name { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
+.req { border-radius: 18px; animation: row-in 0.44s var(--spring) both; animation-delay: calc(var(--i, 0) * 32ms); }
+.req .ad-row { animation: none; align-items: center; }
+.req-actions { flex: none; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.req-confirm { margin: 2px 6px 8px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--red) 9%, transparent); display: flex; flex-direction: column; gap: 10px; animation: row-in 0.3s var(--spring) both; }
+.req-confirm p { font-size: 13.5px; line-height: 1.4; }
+.menu-btn .dot { position: absolute; top: 1px; right: 1px; width: 11px; height: 11px; border-radius: 50%; background: var(--red); box-shadow: 0 0 0 2px var(--glass-solid); }
+.mi .count { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 700; text-align: center; color: #fff; background: var(--red); }
+.mi .count + .go { margin-left: 8px; }
+@media (max-width: 560px) {
+  .req .ad-row { flex-wrap: wrap; }
+  .req .req-actions { width: 100%; justify-content: flex-end; }
+  .user-head { flex-wrap: wrap; }
+}

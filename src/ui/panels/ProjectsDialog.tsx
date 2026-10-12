@@ -106,7 +106,7 @@ function ProjectsBody({ onOpen }: { onOpen: (id: string) => Promise<void> }) {
         {items !== null && items.length > 0 && (
           <>
             <div className="list-head">
-              <span>{inTrash ? t('trashHint') : t('projectsCount', { n: items.length })}</span>
+              <span>{inTrash ? t('trashHint') : items.length === 1 ? t('projectsCountOne') : t('projectsCount', { n: items.length })}</span>
               <button type="button" className="btn text" onClick={() => setSelected(allSelected ? new Set() : new Set(items.map((p) => p.id)))}>
                 {allSelected ? t('selectNone') : t('selectAll')}
               </button>

@@ -10,12 +10,17 @@ export interface Account {
   enabled: boolean;
   user: { id: string; email: string; name: string } | null;
   role: Role | null;
-  /** True after the user opened a password-reset link from their email. */
+  /** True when a new password must be chosen: after a reset link, or after an admin reset the password. */
   recovering: boolean;
+  /** An administrator reset this account's password, so the new password is the default one. */
+  mustChangePassword: boolean;
+  /** The signed-in account's role and flags have been loaded, so decisions that depend on them can be made. */
+  profileReady: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<'signedIn' | 'confirmEmail'>;
   signOut: () => Promise<void>;
-  sendReset: (email: string) => Promise<void>;
+  /** Asks the administrators to reset the password. Nothing is emailed. */
+  requestReset: (email: string) => Promise<void>;
   setNewPassword: (password: string) => Promise<void>;
   endRecovery: () => void;
 }
@@ -30,7 +35,10 @@ function client() {
 export function useAccount(): Account {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<Role | null>(null);
-  const [recovering, setRecovering] = useState(false);
+  const [recoveryLink, setRecoveryLink] = useState(false);
+  const [mustChange, setMustChange] = useState(false);
+  const [forcedDismissed, setForcedDismissed] = useState(false);
+  const [profileReady, setProfileReady] = useState(false);
 
   useEffect(() => {
     if (!supabase) return;
@@ -38,7 +46,7 @@ export function useAccount(): Account {
     const { data } = supabase.auth.onAuthStateChange((event, session) => {
       setAccessToken(session?.access_token ?? null);
       setUser(session?.user ?? null);
-      if (event === 'PASSWORD_RECOVERY') setRecovering(true);
+      if (event === 'PASSWORD_RECOVERY') setRecoveryLink(true);
       // Deferred: supabase-js must not be re-entered from inside this callback.
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') setTimeout(() => void beat().catch(() => undefined), 0);
     });
@@ -49,15 +57,23 @@ export function useAccount(): Account {
   useEffect(() => {
     if (!supabase || !userId) {
       setRole(null);
+      setMustChange(false);
+      setForcedDismissed(false);
+      setProfileReady(false);
       return;
     }
     let live = true;
     void supabase
       .from('profiles')
-      .select('role')
+      .select('role, must_change_password')
       .eq('id', userId)
       .maybeSingle()
-      .then(({ data }) => { if (live) setRole(data?.role === 'admin' ? 'admin' : 'user'); });
+      .then(({ data }) => {
+        if (!live) return;
+        setRole(data?.role === 'admin' ? 'admin' : 'user');
+        setMustChange(data?.must_change_password === true);
+        setProfileReady(true);
+      }, () => live && setProfileReady(true));
     return () => { live = false; };
   }, [userId]);
 
@@ -65,7 +81,9 @@ export function useAccount(): Account {
     enabled: supabase !== null,
     user: user ? { id: user.id, email: user.email ?? '', name: String(user.user_metadata?.display_name ?? user.email?.split('@')[0] ?? '') } : null,
     role,
-    recovering,
+    recovering: recoveryLink || (mustChange && !forcedDismissed),
+    mustChangePassword: mustChange,
+    profileReady,
     signIn: async (email, password) => {
       const { error } = await client().auth.signInWithPassword({ email: email.trim(), password });
       if (error) throw new Error(error.message);
@@ -83,15 +101,23 @@ export function useAccount(): Account {
       const { error } = await client().auth.signOut();
       if (error) throw new Error(error.message);
     },
-    sendReset: async (email) => {
-      const { error } = await client().auth.resetPasswordForEmail(email.trim(), { redirectTo: here() });
+    requestReset: async (email) => {
+      const { error } = await client().rpc('request_password_reset', { p_email: email.trim(), p_user_agent: navigator.userAgent });
       if (error) throw new Error(error.message);
     },
     setNewPassword: async (password) => {
       const { error } = await client().auth.updateUser({ password });
       if (error) throw new Error(error.message);
-      setRecovering(false);
+      if (mustChange) {
+        await client().rpc('clear_must_change_password');
+        setMustChange(false);
+      }
+      setRecoveryLink(false);
     },
-    endRecovery: () => setRecovering(false),
+    // Closing the prompt only postpones it: the flag stays until a new password is saved.
+    endRecovery: () => {
+      setRecoveryLink(false);
+      setForcedDismissed(true);
+    },
   };
 }

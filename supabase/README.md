@@ -18,7 +18,7 @@ npm run db:stop
 |---|---|
 | API (what the app talks to) | http://127.0.0.1:54321 |
 | Studio (browse tables, users) | http://127.0.0.1:54323 |
-| Mailbox (password-reset mails land here) | http://127.0.0.1:54324 |
+| Mailbox (only used if email confirmation is switched on) | http://127.0.0.1:54324 |
 | PostgreSQL | `postgresql://postgres:postgres@127.0.0.1:54322/postgres` |
 
 `.env` already points at the local API. When you move to a real Supabase project, only the two
@@ -68,7 +68,8 @@ so never put the `service_role` key in the app or in git.
 | Table | Purpose | Who can read |
 |---|---|---|
 | `profiles` | Account info and role (`user` / `admin`) | Own row; admins all |
-| `projects` | Saved puzzles. `deleted_at` set = in trash | Owner; admins all |
+| `projects` | Saved puzzles. `deleted_at` set = in trash | Owner; admins see everyone's active projects, never their trash |
+| `password_reset_requests` | "Forgot password" requests waiting for an admin | Admins only |
 | `work_sessions` | One row per visit, guests included | Admins only |
 
 Trash is the `deleted_at` column, not a separate table:
@@ -81,3 +82,11 @@ Items stay in the trash until the user empties them.
 
 Sessions are written through `start_session()` and `touch_session()` so guests can log
 a visit without any read access to the table.
+
+## Forgot password and admin actions
+
+There is no email step. A person asks with `request_password_reset(email)`; an admin approves with
+`admin_reset_password(request)`, which sets the default password (`123456`), ends the account's
+sessions and flags it so the app asks for a new password at the next sign-in. Editing an account is
+`admin_update_user(...)`, and `admin_users()` returns the account list with counts and last visit.
+Every one of these checks `is_admin()` itself, so calling them from outside the app gets the same answer.

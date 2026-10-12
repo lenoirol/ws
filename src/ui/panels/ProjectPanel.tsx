@@ -6,12 +6,14 @@ import { Banner, Spinner } from './Form.tsx';
 export type SaveStatus = { level: 'info' | 'warn'; text: string } | null;
 
 /** Name, Save and "My Projects". Guests can press both; they are asked to sign in first. */
-export function ProjectPanel({ name, setName, saving, status, signedIn, onSave, onOpenList }: {
+export function ProjectPanel({ name, setName, saving, status, signedIn, note, onSave, onOpenList }: {
   name: string;
   setName: (v: string) => void;
   saving: boolean;
   status: SaveStatus;
   signedIn: boolean;
+  /** Longer-lived information, e.g. that the editor holds a copy of someone else's project. */
+  note?: string | null;
   onSave: () => void;
   onOpenList: () => void;
 }) {
@@ -30,6 +32,7 @@ export function ProjectPanel({ name, setName, saving, status, signedIn, onSave, 
         <button type="button" className="tool soft" onClick={onOpenList}>{t('myProjects')}</button>
       </div>
       {status?.level === 'warn' && <div className="row bare-row"><Banner kind="error">{status.text}</Banner></div>}
+      {note && <div className="row bare-row"><Banner kind="info">{note}</Banner></div>}
       {!signedIn && <p className="pp-hint">{t('saveNeedsAccount')}</p>}
     </Group>
   );

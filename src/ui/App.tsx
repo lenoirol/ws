@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { pendingRequestCount } from '../account/admin.ts';
 import { loadProject, saveProject } from '../account/projects.ts';
 import { fromSaved, toSaved } from '../account/projectState.ts';
 import { track } from '../account/sessionLog.ts';
@@ -13,7 +14,7 @@ import { Actions } from './panels/Actions.tsx';
 import { Group, Segmented } from './panels/Fields.tsx';
 import { ComboOptions, CrosswordOptions, ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
 import { AccountMenu } from './panels/AccountMenu.tsx';
-import { AdminDialog } from './panels/AdminDialog.tsx';
+import { AdminDialog } from './admin/AdminDialog.tsx';
 import { AuthDialog } from './panels/AuthDialog.tsx';
 import { ProjectPanel, type SaveStatus } from './panels/ProjectPanel.tsx';
 import { ProjectsDialog } from './panels/ProjectsDialog.tsx';
@@ -67,6 +68,9 @@ export function App() {
   const [authOpen, setAuthOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState(0);
+  /** Shown while the editor holds a copy of somebody else's project. */
+  const [copyNote, setCopyNote] = useState<string | null>(null);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -128,7 +132,31 @@ export function App() {
     setProjectId(id);
     setProjectName(p.name);
     setSaveStatus(null);
+    setCopyNote(null);
   };
+
+  // An administrator can open anyone's project. It becomes a copy: saving makes a new project of the
+  // administrator's own, because the database never lets them overwrite someone else's.
+  const openOthersProject = async (id: string, owner: string) => {
+    const p = await loadProject(id);
+    setS((prev) => fromSaved(p.state, prev));
+    setProjectId(null);
+    setProjectName(p.name);
+    setSaveStatus(null);
+    setCopyNote(t('viewingCopy', { owner }));
+  };
+
+  // Administrators see how many password requests are waiting without opening the console.
+  useEffect(() => {
+    if (account.role !== 'admin') {
+      setPendingRequests(0);
+      return;
+    }
+    const poll = () => void pendingRequestCount().then(setPendingRequests).catch(() => undefined);
+    poll();
+    const id = window.setInterval(poll, 60_000);
+    return () => window.clearInterval(id);
+  }, [account.role]);
 
   useEffect(() => {
     // Changing the compact view changes the backdrop without scrolling it.
@@ -180,14 +208,14 @@ export function App() {
         <header className="sidebar-head">
           <h1><span className="app-icon" aria-hidden="true" />{APP_NAME}</h1>
           <div className="head-actions">
-            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} onProjects={() => ask('projects')} onAdmin={() => setAdminOpen(true)} />
+            <AccountMenu account={account} pending={pendingRequests} onSignIn={() => setAuthOpen(true)} onProjects={() => ask('projects')} onAdmin={() => setAdminOpen(true)} />
             <AppearanceMenu theme={s.theme} glass={s.glassStyle} setTheme={(theme) => set({ theme })} setGlass={(glassStyle) => set({ glassStyle })} icon={<ThemeIcon theme={s.theme} />} label={themeLabel} />
           </div>
         </header>
         <div className="sidebar-scroll">
           <Segmented<AppState['tab']> kind="tab" className="fill compact" label={APP_NAME} value={s.tab} onChange={switchTab} options={[{ value: 'ws', label: t('tabShortWs') }, { value: 'scramble', label: t('tabShortScr') }, { value: 'crossword', label: t('tabShortCw') }, { value: 'combo', label: t('tabCombo') }]} />
           {account.enabled && (
-            <ProjectPanel name={projectName} setName={setProjectName} saving={saving} status={saveStatus} signedIn={account.user !== null} onSave={() => ask('save')} onOpenList={() => ask('projects')} />
+            <ProjectPanel name={projectName} setName={setProjectName} saving={saving} status={saveStatus} signedIn={account.user !== null} note={copyNote} onSave={() => ask('save')} onOpenList={() => ask('projects')} />
           )}
           <Group title={t('words')}>
             <div className="row row-wide">
@@ -227,7 +255,7 @@ export function App() {
       </nav>
 
       {(authOpen || account.recovering) && account.enabled && <AuthDialog account={account} onClose={() => { setAuthOpen(false); if (!account.user) setPending(null); }} />}
-      {adminOpen && account.user && account.role === 'admin' && <AdminDialog selfId={account.user.id} onClose={() => setAdminOpen(false)} />}
+      {adminOpen && account.user && account.role === 'admin' && <AdminDialog selfId={account.user.id} onClose={() => setAdminOpen(false)} onOpenProject={openOthersProject} onPendingChange={setPendingRequests} />}
       {projectsOpen && account.user && <ProjectsDialog onClose={() => setProjectsOpen(false)} onOpen={openProject} />}
     </div>
   );

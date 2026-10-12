@@ -5,18 +5,19 @@ import { t } from '../i18n.ts';
 
 const EXIT_MS = 140;
 
-function Item({ icon, label, onClick, danger = false, go = false }: { icon: IconName; label: string; onClick: () => void; danger?: boolean; go?: boolean }) {
+function Item({ icon, label, onClick, danger = false, go = false, badge = 0 }: { icon: IconName; label: string; onClick: () => void; danger?: boolean; go?: boolean; badge?: number }) {
   return (
     <button type="button" role="menuitem" className={`mi ${danger ? 'danger' : ''}`} onClick={onClick}>
       <Icon name={icon} size={20} />
       <span>{label}</span>
+      {badge > 0 && <span className="count">{badge}</span>}
       {go && <Icon name="chevron" size={16} className="go" />}
     </button>
   );
 }
 
 /** Guests get a sign-in button; signed-in users get their initial, which opens the account panel. */
-export function AccountMenu({ account, onSignIn, onProjects, onAdmin }: { account: Account; onSignIn: () => void; onProjects: () => void; onAdmin: () => void }) {
+export function AccountMenu({ account, pending = 0, onSignIn, onProjects, onAdmin }: { account: Account; /** Password requests waiting for an administrator. */ pending?: number; onSignIn: () => void; onProjects: () => void; onAdmin: () => void }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const root = useRef<HTMLDivElement>(null);
@@ -67,6 +68,7 @@ export function AccountMenu({ account, onSignIn, onProjects, onAdmin }: { accoun
     <div ref={root} className="menu" data-blob="self">
       <button ref={trigger} type="button" className="menu-btn initial" aria-haspopup="menu" aria-expanded={open} aria-label={t('account')} title={email} onClick={() => setOpen((v) => !v)}>
         {(name || email).charAt(0).toUpperCase()}
+        {account.role === 'admin' && pending > 0 && <span className="dot" aria-label={String(pending)} />}
       </button>
       {mounted && (
         <div className="menu-panel account-panel" role="menu" aria-label={t('account')} data-state={open ? 'open' : 'closing'} data-collapsed="0">
@@ -80,7 +82,7 @@ export function AccountMenu({ account, onSignIn, onProjects, onAdmin }: { accoun
           </div>
           <div className="acc-sep" />
           <Item icon="folder" label={t('myProjects')} go onClick={run(onProjects)} />
-          {account.role === 'admin' && <Item icon="shield" label={t('admin')} go onClick={run(onAdmin)} />}
+          {account.role === 'admin' && <Item icon="shield" label={t('admin')} go badge={pending} onClick={run(onAdmin)} />}
           <div className="acc-sep" />
           <Item icon="logout" label={t('signOut')} danger onClick={run(() => void account.signOut())} />
         </div>
