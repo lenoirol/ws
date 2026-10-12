@@ -30,13 +30,19 @@ server without Supabase. You do not need it with the commands above.
 ## 1. Create the project
 
 1. Sign in at https://supabase.com and create a new project. Pick the region closest to your users.
-2. Open **SQL Editor**, paste all of [migrations/0001_init.sql](migrations/0001_init.sql) and run it.
+2. Open **SQL Editor** and run these three files **in order**, one at a time (paste, press Run, wait for "Success"):
+   1. [migrations/0001_init.sql](migrations/0001_init.sql)
+   2. [migrations/0002_puzzle_types.sql](migrations/0002_puzzle_types.sql)
+   3. [migrations/0003_admin_console.sql](migrations/0003_admin_console.sql)
 
 ## 2. Configure sign-in
 
 In **Authentication**:
 
-- **Providers → Email**: enable. Keep "Confirm email" on so password reset and verification mail work.
+- **Providers → Email**: enable. Password reset does not use email (admins approve it in the app), so
+  "Confirm email" is optional. Hosted Supabase's built-in mailer only sends a few messages per hour;
+  switch it off unless you set up your own SMTP.
+- **Sign In / Providers → Password**: minimum length 8, to match local development.
 - **URL Configuration**:
   - Site URL: your published address (the GitHub Pages URL).
   - Redirect URLs: add the same address, plus `http://localhost:5173` for local development.
