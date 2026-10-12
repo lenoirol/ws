@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { generateCrossword } from '../core/crossword/generate.ts';
 import { parseEntries, type Entry, type Issue } from '../core/text.ts';
 import type { WordSearchResult } from '../core/wordsearch/types.ts';
 import type { LayoutWarning, Page } from '../layout/drawops.ts';
 import { canvasMeasure, type Measure } from '../layout/measure.ts';
 import { GeneratorClient, type Progress } from './generatorClient.ts';
 import { generateOptions, layoutFor, scrambleItemsFor } from './pipeline.ts';
-import type { AppState } from './state.ts';
+import { kindsOf, type AppState } from './state.ts';
 
 const DEBOUNCE_MS = 200;
 
@@ -27,20 +28,38 @@ export function usePuzzle(s: AppState): PuzzleView {
   const measure = useMemo<Measure>(() => canvasMeasure(), []);
   const parsed = useMemo(() => parseEntries(s.text), [s.text]);
 
+  const kinds = kindsOf(s);
+  const needsWs = kinds.includes('ws');
+  const needsScr = kinds.includes('scramble');
+  const needsCw = kinds.includes('crossword');
+
   const client = useRef<GeneratorClient | null>(null);
   const [ws, setWs] = useState<WordSearchResult | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusyState] = useState(false);
+  // Setting state to the value it already has still counts as an update scheduled from an effect, and
+  // typing fires this effect on every key: after 50 keys in a row React warns about an update loop.
+  const busyRef = useRef(false);
+  const setBusy = (v: boolean) => {
+    if (busyRef.current === v) return;
+    busyRef.current = v;
+    setBusyState(v);
+  };
   const [progress, setProgress] = useState<Progress | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const wsKey = JSON.stringify([s.sizeMode, s.rows, s.cols, s.dirs, s.allowOverlap, s.fillMode, s.seed]);
   useEffect(() => {
-    if (s.tab !== 'ws') return;
+    if (!needsWs) {
+      // Left Word Search while a grid was still being made: stop the worker and drop the busy state.
+      client.current?.cancel();
+      setBusy(false);
+      return;
+    }
     client.current ??= new GeneratorClient();
     const c = client.current;
     if (parsed.entries.length === 0) {
       c.cancel();
-      setWs(null);
+      if (ws !== null) setWs(null);
       setBusy(false);
       return;
     }
@@ -72,22 +91,31 @@ export function usePuzzle(s: AppState): PuzzleView {
       c.cancel();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.tab, parsed.entries, wsKey]);
+  }, [needsWs, parsed.entries, wsKey]);
 
   const scrambleItems = useMemo(() => scrambleItemsFor(parsed.entries, s, s.seed), [parsed.entries, s.seed, s.firstLetter, s.hintKind, s.hintCount]);
 
-  const layoutKey = JSON.stringify([s.title, s.showName, s.nameLabel, s.footer, s.paper, s.scope, s.listMode, s.listColumns, s.scrambleClues, s.frame, s.cellLines, s.boldLetters]);
+  // Crossword building is quick and seeded, so it runs in step with the typing rather than in the worker.
+  const cw = useMemo(() => (needsCw ? generateCrossword(parsed.entries, { seed: s.seed }) : null), [needsCw, parsed.entries, s.seed]);
+
+  const layoutKey = JSON.stringify([s.tab, s.combo, s.title, s.showName, s.nameLabel, s.footer, s.paper, s.scope, s.listMode, s.listColumns, s.scrambleClues, s.frame, s.cellLines, s.boldLetters, s.cwShowLength, s.cwWordBank]);
   const laid = useMemo(() => {
-    return layoutFor(s, s.tab === 'ws' && parsed.entries.length ? ws : null, s.tab === 'scramble' ? scrambleItems : [], measure);
+    const built = {
+      ws: needsWs && parsed.entries.length ? ws : null,
+      items: needsScr ? scrambleItems : [],
+      cw: needsCw && parsed.entries.length ? cw : null,
+    };
+    return layoutFor(s, built, measure);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [measure, s.tab, ws, scrambleItems, parsed.entries.length, layoutKey]);
+  }, [measure, needsWs, needsScr, needsCw, ws, scrambleItems, cw, parsed.entries.length, layoutKey]);
 
   const issues: Issue[] = [...parsed.issues];
-  if (s.tab === 'ws' && ws) {
+  if (needsWs && ws) {
     issues.push(...ws.issues);
     if (ws.failed.length) issues.push({ kind: 'unplaced', words: ws.failed.map((e) => e.display) });
   }
-  const unchanged = s.tab === 'scramble' ? scrambleItems.filter((i) => i.scrambled.unchanged).map((i) => i.display) : [];
+  if (needsCw && cw && cw.failed.length) issues.push({ kind: 'unplacedCw', words: cw.failed.map((e) => e.display) });
+  const unchanged = needsScr ? scrambleItems.filter((i) => i.scrambled.unchanged).map((i) => i.display) : [];
 
   return {
     pages: laid.pages,

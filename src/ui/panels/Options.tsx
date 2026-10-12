@@ -1,7 +1,7 @@
 import { MAX_COPIES, MAX_GRID, MIN_GRID } from '../../core/constants.ts';
 import { ALL_DIRS, DIR_PRESETS, type Dir } from '../../core/wordsearch/types.ts';
 import { t } from '../i18n.ts';
-import { KIDS_PRESET, type AppState } from '../state.ts';
+import { KIDS_PRESET, type AppState, type ComboId } from '../state.ts';
 import { Disclosure, Group, Row, Segmented, Slider, SwitchRow } from './Fields.tsx';
 
 type Props = { s: AppState; set: (patch: Partial<AppState>) => void };
@@ -134,6 +134,31 @@ export function ScrambleOptions({ s, set }: Props) {
         </Row>
       )}
       <SwitchRow label={t('showClues')} checked={s.scrambleClues} onChange={(v) => set({ scrambleClues: v })} />
+    </Group>
+  );
+}
+
+export function CrosswordOptions({ s, set }: Props) {
+  return (
+    <Group title={t('cwGroup')}>
+      <SwitchRow label={t('cwShowLength')} checked={s.cwShowLength} onChange={(v) => set({ cwShowLength: v })} />
+      <SwitchRow label={t('cwWordBank')} checked={s.cwWordBank} onChange={(v) => set({ cwWordBank: v })} />
+      <p className="pp-hint">{t('cwHint')}</p>
+    </Group>
+  );
+}
+
+export function ComboOptions({ s, set }: Props) {
+  return (
+    <Group title={t('comboGroup')}>
+      <Row label={t('comboPair')}>
+        <Select
+          value={s.combo}
+          onChange={(v) => set({ combo: v as ComboId })}
+          options={[{ value: 'ws+scramble', label: t('comboWsScr') }, { value: 'ws+crossword', label: t('comboWsCw') }, { value: 'crossword+scramble', label: t('comboCwScr') }]}
+        />
+      </Row>
+      <p className="pp-hint">{t('comboHint')}</p>
     </Group>
   );
 }

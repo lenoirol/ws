@@ -4,7 +4,20 @@ import type { ListMode, Scope } from '../layout/layoutWordSearch.ts';
 import type { Paper } from '../layout/page.ts';
 import type { FirstLetterMode } from '../core/scramble/scramble.ts';
 
-export type Tab = 'ws' | 'scramble';
+export type Tab = 'ws' | 'scramble' | 'crossword' | 'combo';
+/** The three puzzle kinds a worksheet can be made of. */
+export type Kind = 'ws' | 'scramble' | 'crossword';
+/** Which two kinds a combined worksheet holds. The order is the order of the pages. */
+export type ComboId = 'ws+scramble' | 'ws+crossword' | 'crossword+scramble';
+
+export const COMBOS: Readonly<Record<ComboId, readonly [Kind, Kind]>> = {
+  'ws+scramble': ['ws', 'scramble'],
+  'ws+crossword': ['ws', 'crossword'],
+  'crossword+scramble': ['crossword', 'scramble'],
+};
+
+/** The puzzle kinds the current mode produces: one, or two when combined. */
+export const kindsOf = (s: Pick<AppState, 'tab' | 'combo'>): readonly Kind[] => (s.tab === 'combo' ? COMBOS[s.combo] : [s.tab]);
 export type Theme = 'system' | 'light' | 'dark';
 export type GlassStyle = 'regular' | 'clear';
 export type HintKind = 'none' | 'first' | 'firstLast' | 'random';
@@ -15,6 +28,8 @@ export interface AppState {
   glassStyle: GlassStyle;
   zoom: number;
   tab: Tab;
+  /** Used when `tab` is 'combo'. */
+  combo: ComboId;
   text: string;
   seed: number;
   title: string;
@@ -37,6 +52,9 @@ export interface AppState {
   frame: boolean;
   cellLines: boolean;
   boldLetters: boolean;
+  // Crossword
+  cwShowLength: boolean;
+  cwWordBank: boolean;
   // Word Scramble
   firstLetter: FirstLetterMode;
   hintKind: HintKind;
@@ -51,6 +69,7 @@ export const initialState = (): AppState => ({
   glassStyle: 'regular',
   zoom: 0,
   tab: 'ws',
+  combo: 'ws+scramble',
   text: '',
   seed: randomSeed(),
   title: '',
@@ -72,6 +91,8 @@ export const initialState = (): AppState => ({
   frame: true,
   cellLines: false,
   boldLetters: false,
+  cwShowLength: true,
+  cwWordBank: false,
   firstLetter: 'free',
   hintKind: 'none',
   hintCount: 2,

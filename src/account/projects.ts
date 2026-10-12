@@ -1,7 +1,7 @@
 import type { SavedState } from './projectState.ts';
 import { supabase } from './supabase.ts';
 
-export type PuzzleType = 'ws' | 'scramble';
+export type PuzzleType = 'ws' | 'scramble' | 'crossword' | 'combo';
 
 export interface ProjectSummary {
   id: string;

@@ -19,7 +19,9 @@ Ba PDF mẫu là nguồn sự thật cho bố cục đầu ra. Đây là các m�
 
 - Web app tĩnh (static), chạy trên Windows, macOS, Linux, iPad, iPhone, Android bằng trình duyệt. Việc tạo đố, xem trước, in và xuất file chạy hoàn toàn trên trình duyệt, không cần server.
 - Tài khoản và lưu project là tính năng **tuỳ chọn**, dùng Supabase (PostgreSQL). Không đăng nhập vẫn dùng đầy đủ mọi tính năng tạo đố; đăng nhập chỉ cần khi muốn lưu project. Nếu bản build không có cấu hình backend (`VITE_SUPABASE_URL`) thì app chạy như bản chỉ-khách, không hiện nút đăng nhập.
-- Chỉ làm 2 loại đố: **Word Search** và **Word Scramble**. Không làm Crossword.
+- Có 3 loại đố: **Word Search**, **Word Scramble** và **Crossword**, cộng chế độ **Kết hợp** (Combine) ghép hai loại vào một bản in.
+- **Crossword**: sinh từ danh sách từ (các từ phải có chữ chung để giao nhau; từ không giao được thì báo "Not in the crossword"). Lưới ưu tiên dạng vuông, chỉ vẽ các ô có chữ, đánh số theo thứ tự đọc. Danh sách gợi ý chia Across (trái) và Down (phải); có tuỳ chọn hiện số chữ và ngân hàng từ (Word Bank). Không nhập gợi ý nào thì tự in Word Bank để vẫn giải được. Nếu một trang không đủ chỗ cho lưới đọc được (ô tối thiểu 5 mm) cùng gợi ý thì tách thành hai trang: lưới một trang, gợi ý trang sau.
+- **Kết hợp**: chọn một trong ba cặp (Word Search + Scramble, Word Search + Crossword, Crossword + Scramble). Dùng chung một danh sách từ và chung tiêu đề, dòng tên, chân trang. Mỗi loại có trang riêng trong cùng một file/lần in; mọi trang đề đứng trước, sau đó mới đến các trang đáp án, cùng thứ tự cặp. Cài đặt riêng của từng loại vẫn hiện đầy đủ. Xuất PNG, PDF và in đều dùng chung đường xử lý với chế độ đơn.
 - **Không lưu dữ liệu đầu vào**: thoát ra vào lại là trang trắng. Cấm dùng localStorage, sessionStorage, IndexedDB, cookie để lưu danh sách từ hay cài đặt. Mọi trạng thái nằm trong bộ nhớ. Ngoại lệ duy nhất: thư viện Supabase giữ token phiên đăng nhập trong localStorage khi người dùng đã đăng nhập. Danh sách từ chỉ được ghi vào cơ sở dữ liệu khi người dùng đã đăng nhập và chủ động bấm Lưu project.
 - **Nhật ký phiên**: mỗi lượt truy cập (cả khách) ghi một dòng vào `work_sessions`: thời điểm, user agent và bộ đếm hành động (png, pdf, print, share, regenerate). Không bao giờ gửi danh sách từ, tiêu đề hay bất kỳ nội dung nào người dùng nhập. Chỉ admin đọc được bảng này. Admin xem nhật ký, thống kê và danh sách tài khoản (đổi vai trò) trong hộp thoại **Admin** ở menu tài khoản.
 - **Project và thùng rác**: người dùng đã đăng nhập lưu, mở lại và xoá mềm project (cột `deleted_at`). Thùng rác cho khôi phục hoặc xoá vĩnh viễn, đều chọn nhiều được. Project chỉ xoá vĩnh viễn được khi đã nằm trong thùng rác, giữ đến khi người dùng tự xoá.
@@ -29,7 +31,7 @@ Ba PDF mẫu là nguồn sự thật cho bố cục đầu ra. Đây là các m�
 
 ## 2. Ngoài phạm vi và lưu ý bản quyền
 
-- Không làm: crossword, app native, lưu danh sách từ khi chưa đăng nhập.
+- Không làm: ghép hai loại đố trên cùng một trang (mỗi loại một trang riêng), danh sách từ riêng cho từng loại trong bản kết hợp, app native, lưu danh sách từ khi chưa đăng nhập.
 - Không dùng tên, logo hay câu chữ "Qualint" và "Wordsheets" trong sản phẩm. Dòng footer mặc định để trống, người dùng tự nhập. Đặt tên app ở một hằng số `APP_NAME` để dễ đổi.
 - Chỉ tái tạo định dạng chung của một tờ đố. Không sao chép mã, ảnh hay giao diện của phần mềm gốc.
 

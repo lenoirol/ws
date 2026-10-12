@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
 import { relativeTime } from '../../account/duration.ts';
 import { listProjects, purgeProjects, restoreProjects, trashProjects, type ProjectSummary } from '../../account/projects.ts';
-import { Icon } from '../icons.tsx';
+import { Icon, type IconName } from '../icons.tsx';
 import { t } from '../i18n.ts';
 import { Segmented } from './Fields.tsx';
 import { Dialog, useDialogClose } from './Dialog.tsx';
 import { Banner, EmptyState, Skeleton } from './Form.tsx';
 
 type View = 'active' | 'trash';
+
+const TYPE_ICON: Record<ProjectSummary['puzzle_type'], IconName> = { ws: 'grid', scramble: 'shuffle', crossword: 'crossword', combo: 'layers' };
+const typeLabel = (p: ProjectSummary): string =>
+  ({ ws: t('tabWordSearch'), scramble: t('tabScramble'), crossword: t('tabCrossword'), combo: t('tabCombo') })[p.puzzle_type];
 type Lists = { active: ProjectSummary[]; trash: ProjectSummary[] };
 
 /** Saved projects and the trash, with multi-select and a contextual action bar. */
@@ -113,10 +117,10 @@ function ProjectsBody({ onOpen }: { onOpen: (id: string) => Promise<void> }) {
                 const when = new Date(inTrash ? p.deleted_at ?? p.updated_at : p.updated_at).getTime();
                 const body = (
                   <>
-                    <span className={`pj-icon ${p.puzzle_type}`}><Icon name={p.puzzle_type === 'ws' ? 'grid' : 'shuffle'} size={20} /></span>
+                    <span className={`pj-icon ${p.puzzle_type}`}><Icon name={TYPE_ICON[p.puzzle_type]} size={20} /></span>
                     <span className="pj-text">
                       <span className="pj-name">{p.name || t('untitled')}</span>
-                      <span className="pj-meta">{p.puzzle_type === 'ws' ? t('tabWordSearch') : t('tabScramble')} · {inTrash ? t('deletedOn', { when: relativeTime(when) }) : relativeTime(when)}</span>
+                      <span className="pj-meta">{typeLabel(p)} · {inTrash ? t('deletedOn', { when: relativeTime(when) }) : relativeTime(when)}</span>
                     </span>
                     {!inTrash && <Icon name="chevron" size={18} className="pj-go" />}
                   </>

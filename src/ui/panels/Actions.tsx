@@ -91,7 +91,7 @@ export function Actions({ s, set, pages, entries, measure, regenerate }: Props) 
   const [step, setStep] = useState<string | null>(null);
   const [canShare, setCanShare] = useState(false);
   const empty = pages.length === 0;
-  const base = `${slug(APP_NAME)}-${s.tab === 'ws' ? 'wordsearch' : 'scramble'}-${s.seed}${s.copies > 1 ? `-x${s.copies}` : ''}`;
+  const base = `${slug(APP_NAME)}-${{ ws: 'wordsearch', scramble: 'scramble', crossword: 'crossword', combo: s.combo.replace('+', '-') }[s.tab]}-${s.seed}${s.copies > 1 ? `-x${s.copies}` : ''}`;
 
   useEffect(() => {
     setCanShare(canShareFile(new Blob([''], { type: 'application/pdf' }), 'x.pdf'));

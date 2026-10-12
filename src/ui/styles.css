@@ -660,3 +660,6 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
   .dlg-card::before { content: ''; flex: none; align-self: center; width: 38px; height: 5px; margin-top: 8px; border-radius: 999px; background: var(--fill2); }
   .dlg-head { padding-top: 12px; }
 }
+
+/* Four puzzle modes share the sidebar width, so the labels get a little less padding. */
+.seg.compact button { padding: 0 6px; font-size: 13.5px; }

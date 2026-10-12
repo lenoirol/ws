@@ -11,7 +11,7 @@ import type { Scope } from '../layout/layoutWordSearch.ts';
 import { t } from './i18n.ts';
 import { Actions } from './panels/Actions.tsx';
 import { Group, Segmented } from './panels/Fields.tsx';
-import { ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
+import { ComboOptions, CrosswordOptions, ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
 import { AccountMenu } from './panels/AccountMenu.tsx';
 import { AdminDialog } from './panels/AdminDialog.tsx';
 import { AuthDialog } from './panels/AuthDialog.tsx';
@@ -20,7 +20,7 @@ import { ProjectsDialog } from './panels/ProjectsDialog.tsx';
 import { AppearanceMenu } from './panels/Menu.tsx';
 import { Preview } from './panels/Preview.tsx';
 import { Slider } from './panels/Fields.tsx';
-import { initialState, type AppState, type Theme } from './state.ts';
+import { initialState, kindsOf, type AppState, type Theme } from './state.ts';
 import { usePuzzle } from './usePuzzle.ts';
 import { withViewTransition } from './viewTransition.ts';
 
@@ -31,6 +31,7 @@ function issueText(i: Issue): string {
     case 'tooShort': return t('tooShort', { w: i.word });
     case 'tooLong': return t('tooLong', { w: i.word });
     case 'unplaced': return t('unplaced', { w: i.words.join(', ') });
+    case 'unplacedCw': return t('unplacedCw', { w: i.words.join(', ') });
     case 'unchanged': return t('unchanged', { w: i.words.join(', ') });
   }
 }
@@ -40,6 +41,7 @@ function warningText(w: LayoutWarning): string {
     case 'smallFont': return t(w.level === 'severe' ? 'smallFontSevere' : 'smallFont', { pt: w.pt.toFixed(1) });
     case 'listTooLarge': return t('listTooLarge');
     case 'scrambleCramped': return t('scrambleCramped');
+    case 'crosswordCramped': return t('crosswordCramped');
   }
 }
 
@@ -155,7 +157,9 @@ export function App() {
     ...(view$.unchanged.length ? [{ level: 'info' as const, text: issueText({ kind: 'unchanged', words: view$.unchanged }) }] : []),
     ...view$.warnings.map((w) => ({ level: 'warn' as const, text: warningText(w) })),
   ];
-  const clueRelevant = s.tab === 'ws' ? s.listMode === 'clues' || s.listMode === 'both' : s.scrambleClues;
+  const kinds = kindsOf(s);
+  // The crossword is left out on purpose: without clues it prints a word bank instead of failing.
+  const clueRelevant = (kinds.includes('ws') && (s.listMode === 'clues' || s.listMode === 'both')) || (kinds.includes('scramble') && s.scrambleClues);
   if (clueRelevant && view$.wordCount > 0 && !view$.hasClues) notices.push({ level: 'warn', text: t('noClues') });
 
   const busyText = view$.busy ? t('generating', { placed: view$.progress?.placed ?? 0, total: view$.progress?.total ?? view$.wordCount }) : null;
@@ -181,7 +185,7 @@ export function App() {
           </div>
         </header>
         <div className="sidebar-scroll">
-          <Segmented<AppState['tab']> kind="tab" className="fill" label={APP_NAME} value={s.tab} onChange={switchTab} options={[{ value: 'ws', label: t('tabWordSearch') }, { value: 'scramble', label: t('tabScramble') }]} />
+          <Segmented<AppState['tab']> kind="tab" className="fill compact" label={APP_NAME} value={s.tab} onChange={switchTab} options={[{ value: 'ws', label: t('tabShortWs') }, { value: 'scramble', label: t('tabShortScr') }, { value: 'crossword', label: t('tabShortCw') }, { value: 'combo', label: t('tabCombo') }]} />
           {account.enabled && (
             <ProjectPanel name={projectName} setName={setProjectName} saving={saving} status={saveStatus} signedIn={account.user !== null} onSave={() => ask('save')} onOpenList={() => ask('projects')} />
           )}
@@ -199,7 +203,10 @@ export function App() {
             </Group>
           )}
           {view$.error && <p className="row notice warn" role="alert">{t('error', { m: view$.error })}</p>}
-          {s.tab === 'ws' ? <WordSearchOptions s={s} set={set} /> : <ScrambleOptions s={s} set={set} />}
+          {s.tab === 'combo' && <ComboOptions s={s} set={set} />}
+          {kinds.map((k) =>
+            k === 'ws' ? <WordSearchOptions key={k} s={s} set={set} /> : k === 'scramble' ? <ScrambleOptions key={k} s={s} set={set} /> : <CrosswordOptions key={k} s={s} set={set} />,
+          )}
           <SharedOptions s={s} set={set} />
         </div>
       </aside>

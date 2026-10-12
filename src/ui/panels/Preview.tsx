@@ -28,7 +28,7 @@ export function Preview({ pages, empty, copies, seed, zoom }: { pages: Page[]; e
       <div className="pages">
         {svgs.map((svg, i) => (
           <figure key={`${seed}-${i}`} className="page-card" style={{ '--i': i, ...(zoom ? { width: `${zoom}%`, maxWidth: 'none' } : {}) } as CSSProperties}>
-            <figcaption>{t('pageN', { n: i + 1, total: svgs.length })}</figcaption>
+            <figcaption>{t('pageN', { n: i + 1, total: svgs.length })}{pages[i]?.label ? ` · ${pages[i]?.label}` : ''}</figcaption>
             <div className="sheet-view" data-page-index={i} dangerouslySetInnerHTML={{ __html: svg }} />
           </figure>
         ))}

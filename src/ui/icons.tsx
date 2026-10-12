@@ -3,6 +3,8 @@ const PATHS = {
   close: 'M6 6l12 12M18 6 6 18',
   check: 'M5 12.5l4.5 4.5L19 7.5',
   grid: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h6v6h-6z',
+  crossword: 'M3 9h18M3 15h18M9 3v18M15 3v18M3 4a1 1 0 0 1 1-1h16a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4z',
+  layers: 'M12 3 3 8l9 5 9-5-9-5zM3 13l9 5 9-5M3 17.5l9 5 9-5',
   shuffle: 'M16 3h5v5M4 20 21 3M21 16v5h-5M15 15l6 6M4 4l5 5',
   trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
   restore: 'M3 12a9 9 0 1 0 3-6.7M3 4v5h5',

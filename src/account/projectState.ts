@@ -2,9 +2,9 @@ import type { AppState } from '../ui/state.ts';
 
 /** Everything that defines a worksheet. Appearance (theme, glass, zoom) is a viewer preference and stays out. */
 const KEYS = [
-  'tab', 'text', 'seed', 'title', 'showName', 'nameLabel', 'footer', 'paper', 'scope', 'dpi',
+  'tab', 'combo', 'text', 'seed', 'title', 'showName', 'nameLabel', 'footer', 'paper', 'scope', 'dpi',
   'sizeMode', 'rows', 'cols', 'square', 'dirs', 'allowOverlap', 'fillMode', 'listMode', 'listColumns',
-  'frame', 'cellLines', 'boldLetters', 'firstLetter', 'hintKind', 'hintCount', 'scrambleClues', 'copies',
+  'frame', 'cellLines', 'boldLetters', 'cwShowLength', 'cwWordBank', 'firstLetter', 'hintKind', 'hintCount', 'scrambleClues', 'copies',
 ] as const satisfies readonly (keyof AppState)[];
 
 export type SavedState = Pick<AppState, (typeof KEYS)[number]>;

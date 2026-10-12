@@ -13,6 +13,7 @@ export type Issue =
   | { kind: 'tooShort'; word: string }
   | { kind: 'tooLong'; word: string }
   | { kind: 'unplaced'; words: string[] }
+  | { kind: 'unplacedCw'; words: string[] }
   | { kind: 'unchanged'; words: string[] };
 
 const COMBINING_MARKS = /\p{M}/gu;

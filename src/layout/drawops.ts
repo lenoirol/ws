@@ -21,9 +21,12 @@ export interface Page {
   widthMm: number;
   heightMm: number;
   ops: DrawOp[];
+  /** Which puzzle this page belongs to; shown in the preview when several kinds are combined. */
+  label?: string;
 }
 
 export type LayoutWarning =
   | { kind: 'smallFont'; pt: number; level: 'warn' | 'severe' }
   | { kind: 'listTooLarge' }
-  | { kind: 'scrambleCramped' };
+  | { kind: 'scrambleCramped' }
+  | { kind: 'crosswordCramped' };
