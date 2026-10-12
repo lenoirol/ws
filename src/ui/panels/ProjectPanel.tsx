@@ -1,5 +1,7 @@
+import { Icon } from '../icons.tsx';
 import { t } from '../i18n.ts';
 import { Group } from './Fields.tsx';
+import { Banner, Spinner } from './Form.tsx';
 
 export type SaveStatus = { level: 'info' | 'warn'; text: string } | null;
 
@@ -13,6 +15,7 @@ export function ProjectPanel({ name, setName, saving, status, signedIn, onSave, 
   onSave: () => void;
   onOpenList: () => void;
 }) {
+  const saved = status?.level === 'info' && !saving;
   return (
     <Group title={t('project')}>
       <label className="row">
@@ -20,11 +23,14 @@ export function ProjectPanel({ name, setName, saving, status, signedIn, onSave, 
         <span className="row-control"><input type="text" value={name} placeholder={t('untitled')} maxLength={120} onChange={(e) => setName(e.target.value)} /></span>
       </label>
       <div className="row btn-row">
-        <button type="button" className="tool prominent" disabled={saving} onClick={onSave}>{t('save')}</button>
+        <button type="button" className={`tool prominent save-btn ${saved ? 'saved' : ''}`} disabled={saving} onClick={onSave} aria-live="polite">
+          {saving ? <Spinner /> : saved ? <Icon name="check" size={18} /> : null}
+          <span>{saving ? t('saving') : saved ? t('savedShort') : t('save')}</span>
+        </button>
         <button type="button" className="tool soft" onClick={onOpenList}>{t('myProjects')}</button>
       </div>
-      {status && <div className={`row notice ${status.level}`} role={status.level === 'warn' ? 'alert' : 'status'}><span>{status.text}</span></div>}
-      {!signedIn && <div className="row notice info"><span>{t('saveNeedsAccount')}</span></div>}
+      {status?.level === 'warn' && <div className="row bare-row"><Banner kind="error">{status.text}</Banner></div>}
+      {!signedIn && <p className="pp-hint">{t('saveNeedsAccount')}</p>}
     </Group>
   );
 }

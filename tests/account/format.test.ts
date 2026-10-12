@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration } from '../../src/account/duration.ts';
+import { formatDuration, relativeTime } from '../../src/account/duration.ts';
 import { describeAgent } from '../../src/account/userAgent.ts';
 
 describe('formatDuration', () => {
@@ -27,5 +27,19 @@ describe('describeAgent', () => {
   it('handles missing values', () => {
     expect(describeAgent(null)).toBe('Unknown');
     expect(describeAgent('')).toBe('Unknown');
+  });
+});
+
+describe('relativeTime', () => {
+  const now = Date.UTC(2026, 9, 12, 12, 0, 0);
+  it('speaks in the largest sensible unit', () => {
+    expect(relativeTime(now - 5_000, now, 'en')).toBe('now');
+    expect(relativeTime(now - 5 * 60_000, now, 'en')).toBe('5 minutes ago');
+    expect(relativeTime(now - 3 * 3_600_000, now, 'en')).toBe('3 hours ago');
+    expect(relativeTime(now - 86_400_000, now, 'en')).toBe('yesterday');
+    expect(relativeTime(now - 4 * 86_400_000, now, 'en')).toBe('4 days ago');
+  });
+  it('falls back to a date after a month', () => {
+    expect(relativeTime(now - 45 * 86_400_000, now, 'en')).toMatch(/Aug \d+, 2026/);
   });
 });

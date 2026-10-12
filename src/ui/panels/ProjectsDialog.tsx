@@ -1,59 +1,62 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { relativeTime } from '../../account/duration.ts';
 import { listProjects, purgeProjects, restoreProjects, trashProjects, type ProjectSummary } from '../../account/projects.ts';
+import { Icon } from '../icons.tsx';
 import { t } from '../i18n.ts';
-import { Group, Segmented } from './Fields.tsx';
+import { Segmented } from './Fields.tsx';
+import { Dialog, useDialogClose } from './Dialog.tsx';
+import { Banner, EmptyState, Skeleton } from './Form.tsx';
 
 type View = 'active' | 'trash';
+type Lists = { active: ProjectSummary[]; trash: ProjectSummary[] };
 
-/** Saved projects and the trash. Both lists allow selecting several rows and acting on them together. */
+/** Saved projects and the trash, with multi-select and a contextual action bar. */
 export function ProjectsDialog({ onClose, onOpen }: { onClose: () => void; onOpen: (id: string) => Promise<void> }) {
+  return (
+    <Dialog title={t('myProjects')} size="md" onClose={onClose}>
+      <ProjectsBody onOpen={onOpen} />
+    </Dialog>
+  );
+}
+
+function ProjectsBody({ onOpen }: { onOpen: (id: string) => Promise<void> }) {
+  const close = useDialogClose();
   const [view, setView] = useState<View>('active');
-  const [items, setItems] = useState<ProjectSummary[] | null>(null);
+  const [lists, setLists] = useState<Lists | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
-  const inTrash = view === 'trash';
 
-  // The latest request wins, so a slow answer for the tab the user just left is dropped.
-  const requestId = useRef(0);
-  const load = async (which: View) => {
-    const mine = ++requestId.current;
+  // Both lists are fetched together, so switching tabs is instant and the tab labels can show counts.
+  const refresh = async () => {
     try {
-      const rows = await listProjects(which === 'trash');
-      if (mine === requestId.current) setItems(rows);
+      const [active, trash] = await Promise.all([listProjects(false), listProjects(true)]);
+      setLists({ active, trash });
     } catch (e) {
-      if (mine !== requestId.current) return;
       setError(t('error', { m: (e as Error).message }));
-      setItems([]);
+      setLists((prev) => prev ?? { active: [], trash: [] });
     }
   };
+  useEffect(() => { void refresh(); }, []);
 
-  useEffect(() => {
-    setItems(null);
+  const inTrash = view === 'trash';
+  const items = lists ? (inTrash ? lists.trash : lists.active) : null;
+  const n = selected.size;
+
+  const switchView = (next: View) => {
+    setView(next);
     setSelected(new Set());
     setConfirming(false);
     setError(null);
-    void load(view);
-  }, [view]);
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
+  };
   const toggle = (id: string) =>
     setSelected((prev) => {
       const next = new Set(prev);
       if (!next.delete(id)) next.add(id);
       return next;
     });
-
-  const allSelected = items !== null && items.length > 0 && selected.size === items.length;
-  const toggleAll = () => setSelected(allSelected ? new Set() : new Set((items ?? []).map((p) => p.id)));
+  const allSelected = !!items && items.length > 0 && n === items.length;
 
   const act = async (fn: (ids: string[]) => Promise<void>) => {
     setBusy(true);
@@ -62,7 +65,7 @@ export function ProjectsDialog({ onClose, onOpen }: { onClose: () => void; onOpe
       await fn([...selected]);
       setSelected(new Set());
       setConfirming(false);
-      await load(view);
+      await refresh();
     } catch (e) {
       setError(t('error', { m: (e as Error).message }));
     } finally {
@@ -75,84 +78,88 @@ export function ProjectsDialog({ onClose, onOpen }: { onClose: () => void; onOpe
     setError(null);
     try {
       await onOpen(id);
+      close();
     } catch (e) {
       setError(t('error', { m: (e as Error).message }));
       setBusy(false);
     }
   };
 
-  const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-  const n = selected.size;
-  const typeLabel = (p: ProjectSummary) => (p.puzzle_type === 'ws' ? t('tabWordSearch') : t('tabScramble'));
+  const withCount = (label: string, count: number | undefined) => (count === undefined ? label : t('tabWithCount', { label, n: count }));
 
   return (
-    <div className="auth-backdrop" role="presentation" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="auth-card wide" role="dialog" aria-modal="true" aria-label={t('myProjects')}>
-        <div className="auth-head">
-          <h2>{t('myProjects')}</h2>
-          <button type="button" className="auth-x" aria-label={t('close')} title={t('close')} onClick={onClose}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
-        </div>
+    <>
+      <Segmented<View> kind="tab" className="fill" label={t('myProjects')} value={view} onChange={switchView}
+        options={[{ value: 'active', label: withCount(t('tabProjects'), lists?.active.length) }, { value: 'trash', label: withCount(t('tabTrash'), lists?.trash.length) }]} />
 
-        <Segmented<View> kind="tab" className="fill" label={t('myProjects')} value={view} onChange={setView}
-          options={[{ value: 'active', label: t('tabProjects') }, { value: 'trash', label: t('tabTrash') }]} />
-
-        {inTrash && <p className="auth-msg">{t('trashHint')}</p>}
-        {items === null && <p className="auth-msg" role="status">{t('loading')}</p>}
-        {items !== null && items.length === 0 && !error && <p className="auth-msg">{inTrash ? t('trashEmpty') : t('noProjects')}</p>}
-
+      <div className="view-swap" key={view}>
+        {items === null && <Skeleton />}
+        {items !== null && items.length === 0 && (
+          inTrash
+            ? <EmptyState icon="trash" title={t('trashEmptyTitle')} hint={t('trashHint')} />
+            : <EmptyState icon="folder" title={t('noProjectsTitle')} hint={t('noProjects')} />
+        )}
         {items !== null && items.length > 0 && (
           <>
-            <div className="auth-links list-tools">
-              <button type="button" onClick={toggleAll}>{allSelected ? t('selectNone') : t('selectAll')}</button>
+            <div className="list-head">
+              <span>{inTrash ? t('trashHint') : t('projectsCount', { n: items.length })}</span>
+              <button type="button" className="btn text" onClick={() => setSelected(allSelected ? new Set() : new Set(items.map((p) => p.id)))}>
+                {allSelected ? t('selectNone') : t('selectAll')}
+              </button>
             </div>
-            <Group>
-              {items.map((p) => (
-                <div key={p.id} className="row project-row">
-                  <input type="checkbox" className="project-check" aria-label={p.name || t('untitled')} checked={selected.has(p.id)} onChange={() => toggle(p.id)} />
-                  {inTrash ? (
-                    <label className="project-main static">
-                      <span className="project-name">{p.name || t('untitled')}</span>
-                      <span className="project-meta">{typeLabel(p)} · {t('deletedOn', { when: fmt.format(new Date(p.deleted_at ?? p.updated_at)) })}</span>
-                    </label>
-                  ) : (
-                    <button type="button" className="project-main" disabled={busy} onClick={() => void open(p.id)}>
-                      <span className="project-name">{p.name || t('untitled')}</span>
-                      <span className="project-meta">{typeLabel(p)} · {fmt.format(new Date(p.updated_at))}</span>
+            <div className="pj-list">
+              {items.map((p, i) => {
+                const on = selected.has(p.id);
+                const when = new Date(inTrash ? p.deleted_at ?? p.updated_at : p.updated_at).getTime();
+                const body = (
+                  <>
+                    <span className={`pj-icon ${p.puzzle_type}`}><Icon name={p.puzzle_type === 'ws' ? 'grid' : 'shuffle'} size={20} /></span>
+                    <span className="pj-text">
+                      <span className="pj-name">{p.name || t('untitled')}</span>
+                      <span className="pj-meta">{p.puzzle_type === 'ws' ? t('tabWordSearch') : t('tabScramble')} · {inTrash ? t('deletedOn', { when: relativeTime(when) }) : relativeTime(when)}</span>
+                    </span>
+                    {!inTrash && <Icon name="chevron" size={18} className="pj-go" />}
+                  </>
+                );
+                return (
+                  <div key={p.id} className="pj-row" data-selected={on ? '1' : '0'} style={{ '--i': Math.min(i, 8) } as React.CSSProperties}>
+                    <button type="button" role="checkbox" aria-checked={on} aria-label={p.name || t('untitled')} className="pj-check" onClick={() => toggle(p.id)}>
+                      <Icon name="check" size={14} />
                     </button>
-                  )}
-                </div>
-              ))}
-            </Group>
+                    <button type="button" className="pj-main" disabled={busy} onClick={() => (inTrash ? toggle(p.id) : void open(p.id))}>{body}</button>
+                  </div>
+                );
+              })}
+            </div>
           </>
         )}
-
-        {error && <p className="auth-msg error" role="alert">{error}</p>}
-
-        {items !== null && items.length > 0 && !inTrash && (
-          <button type="button" className="tool soft auth-submit" disabled={busy || n === 0} onClick={() => void act(trashProjects)}>
-            {n > 0 ? t('moveToTrashN', { n }) : t('moveToTrash')}
-          </button>
-        )}
-
-        {items !== null && items.length > 0 && inTrash && !confirming && (
-          <div className="row btn-row bare">
-            <button type="button" className="tool soft" disabled={busy || n === 0} onClick={() => void act(restoreProjects)}>{n > 0 ? t('restoreN', { n }) : t('restore')}</button>
-            <button type="button" className="tool soft danger-text" disabled={busy || n === 0} onClick={() => setConfirming(true)}>{n > 0 ? t('deleteForeverN', { n }) : t('deleteForever')}</button>
-          </div>
-        )}
-
-        {inTrash && confirming && (
-          <div className="confirm-box" role="alertdialog" aria-label={t('deleteForever')}>
-            <p className="auth-msg error">{t('confirmPurge', { n })}</p>
-            <div className="row btn-row bare">
-              <button type="button" className="tool soft" disabled={busy} onClick={() => setConfirming(false)}>{t('cancel')}</button>
-              <button type="button" className="tool danger" disabled={busy} onClick={() => void act(purgeProjects)}>{t('deleteForeverN', { n })}</button>
-            </div>
-          </div>
-        )}
       </div>
-    </div>
+
+      {error && <Banner kind="error">{error}</Banner>}
+
+      <div className="sel-wrap" data-open={n > 0 ? '1' : '0'}>
+        <div className="sel-inner">
+          {confirming ? (
+            <div className="sel-bar confirm" role="alertdialog" aria-label={t('deleteForever')}>
+              <span className="sel-count">{t('confirmPurge', { n })}</span>
+              <button type="button" className="btn sm" disabled={busy} onClick={() => setConfirming(false)}>{t('cancel')}</button>
+              <button type="button" className="btn sm danger" disabled={busy} onClick={() => void act(purgeProjects)}>{t('deleteForever')}</button>
+            </div>
+          ) : (
+            <div className="sel-bar">
+              <span className="sel-count">{t('selectedN', { n })}</span>
+              {inTrash ? (
+                <>
+                  <button type="button" className="btn sm" disabled={busy} onClick={() => void act(restoreProjects)}><Icon name="restore" size={17} />{t('restore')}</button>
+                  <button type="button" className="btn sm danger-soft" disabled={busy} onClick={() => setConfirming(true)}><Icon name="trash" size={17} />{t('deleteForever')}</button>
+                </>
+              ) : (
+                <button type="button" className="btn sm danger-soft" disabled={busy} onClick={() => void act(trashProjects)}><Icon name="trash" size={17} />{t('moveToTrash')}</button>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </>
   );
 }

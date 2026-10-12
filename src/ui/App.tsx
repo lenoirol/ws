@@ -113,13 +113,19 @@ export function App() {
     setSaveStatus(null);
   }, [account.user?.id]);
 
+  // The "Saved" confirmation fades back to the normal button after a moment.
+  useEffect(() => {
+    if (saveStatus?.level !== 'info') return;
+    const id = window.setTimeout(() => setSaveStatus(null), 2400);
+    return () => window.clearTimeout(id);
+  }, [saveStatus]);
+
   const openProject = async (id: string) => {
     const p = await loadProject(id);
     setS((prev) => fromSaved(p.state, prev));
     setProjectId(id);
     setProjectName(p.name);
     setSaveStatus(null);
-    setProjectsOpen(false);
   };
 
   useEffect(() => {
@@ -170,7 +176,7 @@ export function App() {
         <header className="sidebar-head">
           <h1><span className="app-icon" aria-hidden="true" />{APP_NAME}</h1>
           <div className="head-actions">
-            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} onAdmin={() => setAdminOpen(true)} />
+            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} onProjects={() => ask('projects')} onAdmin={() => setAdminOpen(true)} />
             <AppearanceMenu theme={s.theme} glass={s.glassStyle} setTheme={(theme) => set({ theme })} setGlass={(glassStyle) => set({ glassStyle })} icon={<ThemeIcon theme={s.theme} />} label={themeLabel} />
           </div>
         </header>

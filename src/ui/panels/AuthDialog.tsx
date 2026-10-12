@@ -1,13 +1,19 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import type { Account } from '../../account/useAccount.ts';
-import { checkCredentials, MIN_PASSWORD } from '../../account/validate.ts';
+import { checkCredentials, MIN_PASSWORD, type CredentialIssue } from '../../account/validate.ts';
 import { t } from '../i18n.ts';
-import { Group } from './Fields.tsx';
+import { Segmented } from './Fields.tsx';
+import { CloseWhen, Dialog } from './Dialog.tsx';
+import { Banner, Spinner, TextField } from './Form.tsx';
 
 type Mode = 'signin' | 'signup' | 'forgot';
+type Field = 'email' | 'password' | 'confirm';
+
+const issueField = (i: CredentialIssue): Field => (i === 'email' ? 'email' : i === 'passwordShort' ? 'password' : 'confirm');
 
 /** Sign in, create an account or reset a password. Also shown when a reset link brings the user back. */
 export function AuthDialog({ account, onClose }: { account: Account; onClose: () => void }) {
+  const recovering = account.recovering;
   const [mode, setMode] = useState<Mode>('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -16,63 +22,47 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
-  const card = useRef<HTMLFormElement>(null);
-  const recovering = account.recovering;
-
-  const close = () => {
-    if (recovering) account.endRecovery();
-    onClose();
-  };
-  const closeRef = useRef(close);
-  closeRef.current = close;
-
-  useEffect(() => {
-    card.current?.querySelector<HTMLInputElement>('input')?.focus();
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
-    document.addEventListener('keydown', onKey);
-    return () => document.removeEventListener('keydown', onKey);
-  }, []);
-
-  // Signing in (or finishing a reset) closes the dialog by itself.
-  useEffect(() => {
-    if (account.user && !recovering) onClose();
-  }, [account.user, recovering]);
+  const [bad, setBad] = useState<Field | null>(null);
 
   const go = (next: Mode) => {
     setMode(next);
     setError(null);
     setInfo(null);
+    setBad(null);
   };
 
-  const issueText = (issue: NonNullable<ReturnType<typeof checkCredentials>>) =>
+  const issueText = (issue: CredentialIssue) =>
     issue === 'email' ? t('authEmail') : issue === 'passwordShort' ? t('authPasswordShort', { n: MIN_PASSWORD }) : t('authPasswordMismatch');
+  const reject = (issue: CredentialIssue) => {
+    setError(issueText(issue));
+    setBad(issueField(issue));
+  };
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setInfo(null);
+    setBad(null);
     try {
       if (recovering) {
         const issue = checkCredentials('x@x.xx', password, confirm);
-        if (issue) return setError(issueText(issue));
+        if (issue) return reject(issue);
         setBusy(true);
         await account.setNewPassword(password);
         return;
       }
       if (mode === 'forgot') {
         const issue = checkCredentials(email, 'x'.repeat(MIN_PASSWORD));
-        if (issue) return setError(issueText(issue));
+        if (issue) return reject(issue);
         setBusy(true);
         await account.sendReset(email);
         setInfo(t('resetSent'));
         return;
       }
       // Signing in accepts any non-empty password: an account may predate the current length rule.
-      const issue = mode === 'signin'
-        ? checkCredentials(email, 'x'.repeat(MIN_PASSWORD))
-        : checkCredentials(email, password, confirm);
-      if (issue) return setError(issueText(issue));
-      if (!password) return setError(issueText('passwordShort'));
+      const issue = mode === 'signin' ? checkCredentials(email, 'x'.repeat(MIN_PASSWORD)) : checkCredentials(email, password, confirm);
+      if (issue) return reject(issue);
+      if (!password) return reject('passwordShort');
       setBusy(true);
       if (mode === 'signin') await account.signIn(email, password);
       else if ((await account.signUp(email, password, name)) === 'confirmEmail') {
@@ -88,65 +78,49 @@ export function AuthDialog({ account, onClose }: { account: Account; onClose: ()
     }
   };
 
-  const title = recovering ? t('newPassword') : mode === 'signup' ? t('signUp') : mode === 'forgot' ? t('forgotPassword') : t('signIn');
+  const title = recovering ? t('newPassword') : mode === 'signup' ? t('signUp') : mode === 'forgot' ? t('resetTitle') : t('signIn');
   const submitLabel = recovering ? t('savePassword') : mode === 'signup' ? t('signUp') : mode === 'forgot' ? t('sendReset') : t('signIn');
 
   return (
-    <div className="auth-backdrop" role="presentation" onPointerDown={(e) => e.target === e.currentTarget && close()}>
-      <form ref={card} className="auth-card" role="dialog" aria-modal="true" aria-label={title} onSubmit={(e) => void submit(e)} noValidate>
-        <div className="auth-head">
-          <h2>{title}</h2>
-          <button type="button" className="auth-x" aria-label={t('close')} title={t('close')} onClick={close}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
-        </div>
+    <Dialog title={title} onClose={() => { if (recovering) account.endRecovery(); onClose(); }}>
+      <CloseWhen when={account.user !== null && !recovering} />
+      <form className="auth-form" onSubmit={(e) => void submit(e)} noValidate>
+        {!recovering && mode !== 'forgot' && (
+          <Segmented<Mode> kind="tab" className="fill" label={t('account')} value={mode} onChange={go}
+            options={[{ value: 'signin', label: t('signIn') }, { value: 'signup', label: t('signUp') }]} />
+        )}
 
-        <Group>
-          {!recovering && (
-            <label className="row">
-              <span className="row-label">{t('email')}</span>
-              <span className="row-control"><input type="email" autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)} /></span>
-            </label>
-          )}
-          {mode === 'signup' && !recovering && (
-            <label className="row">
-              <span className="row-label">{t('displayName')}</span>
-              <span className="row-control"><input type="text" autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} /></span>
-            </label>
-          )}
+        {mode === 'forgot' && !recovering && <p className="dlg-sub">{t('resetIntro')}</p>}
+
+        {/* keyed by mode so the fields ease in again when the form changes */}
+        <div className="fields" key={recovering ? 'recovery' : mode}>
+          {mode === 'signup' && !recovering && <TextField label={t('displayName')} value={name} onChange={setName} autoComplete="name" />}
+          {!recovering && <TextField label={t('email')} type="email" inputMode="email" value={email} onChange={setEmail} autoComplete="email" invalid={bad === 'email'} autoFocus />}
           {(recovering || mode !== 'forgot') && (
-            <label className="row">
-              <span className="row-label">{recovering ? t('newPassword') : t('password')}</span>
-              <span className="row-control"><input type="password" autoComplete={mode === 'signin' && !recovering ? 'current-password' : 'new-password'} value={password} onChange={(e) => setPassword(e.target.value)} /></span>
-            </label>
+            <TextField label={recovering ? t('newPassword') : t('password')} type="password" value={password} onChange={setPassword}
+              autoComplete={mode === 'signin' && !recovering ? 'current-password' : 'new-password'} invalid={bad === 'password'} autoFocus={recovering}
+              hint={mode === 'signup' || recovering ? t('passwordHint', { n: MIN_PASSWORD }) : undefined} />
           )}
           {(recovering || mode === 'signup') && (
-            <label className="row">
-              <span className="row-label">{t('confirmPassword')}</span>
-              <span className="row-control"><input type="password" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} /></span>
-            </label>
+            <TextField label={t('confirmPassword')} type="password" value={confirm} onChange={setConfirm} autoComplete="new-password" invalid={bad === 'confirm'} />
           )}
-        </Group>
+        </div>
 
-        {error && <p className="auth-msg error" role="alert">{error}</p>}
-        {info && <p className="auth-msg" role="status">{info}</p>}
-
-        <button type="submit" className="tool prominent auth-submit" disabled={busy}>{submitLabel}</button>
-
-        {!recovering && (
-          <div className="auth-links">
-            {mode === 'signin' && (
-              <>
-                <button type="button" onClick={() => go('forgot')}>{t('forgotPassword')}</button>
-                <button type="button" onClick={() => go('signup')}>{t('noAccountYet')}</button>
-              </>
-            )}
-            {mode === 'signup' && <button type="button" onClick={() => go('signin')}>{t('haveAccount')}</button>}
-            {mode === 'forgot' && <button type="button" onClick={() => go('signin')}>{t('backToSignIn')}</button>}
-          </div>
+        {mode === 'signin' && !recovering && (
+          <button type="button" className="btn text aux-link" onClick={() => go('forgot')}>{t('forgotPassword')}</button>
         )}
-        <p className="auth-note">{t('guestNote')}</p>
+
+        {error && <Banner kind="error">{error}</Banner>}
+        {info && <Banner kind="ok" icon="mail">{info}</Banner>}
+
+        <button type="submit" className="btn primary block" disabled={busy}>
+          {busy && <Spinner />}
+          <span>{submitLabel}</span>
+        </button>
+
+        {mode === 'forgot' && !recovering && <button type="button" className="btn text" onClick={() => go('signin')}>{t('backToSignIn')}</button>}
+        <p className="dlg-note">{t('guestNote')}</p>
       </form>
-    </div>
+    </Dialog>
   );
 }

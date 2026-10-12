@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { listSessions, listUsers, loadStats, PAGE, setUserRole, type SessionFilter, type SessionRow, type Stats, type UserRow } from '../../account/admin.ts';
-import { formatDuration } from '../../account/duration.ts';
+import { formatDuration, relativeTime } from '../../account/duration.ts';
 import { describeAgent } from '../../account/userAgent.ts';
 import type { Role } from '../../account/useAccount.ts';
+import { Icon } from '../icons.tsx';
 import { t } from '../i18n.ts';
-import { Group, Segmented } from './Fields.tsx';
+import { Segmented } from './Fields.tsx';
+import { Dialog } from './Dialog.tsx';
+import { Banner, EmptyState, Skeleton, Spinner } from './Form.tsx';
 
 type Tab = 'sessions' | 'users';
 
@@ -16,9 +19,20 @@ const ACTIONS = [
   ['regenerate', 'actRegenerate'],
 ] as const;
 
-function Stat({ label, value }: { label: string; value: number | null }) {
+function hue(text: string): number {
+  let h = 0;
+  for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) % 360;
+  return h;
+}
+
+function Avatar({ text, guest = false }: { text: string; guest?: boolean }) {
+  if (guest) return <span className="av guest"><Icon name="user" size={18} /></span>;
+  return <span className="av" style={{ background: `hsl(${hue(text)} 52% 50%)` }}>{(text || '?').charAt(0).toUpperCase()}</span>;
+}
+
+function Stat({ label, value, i }: { label: string; value: number | null; i: number }) {
   return (
-    <div className="stat">
+    <div className="stat" style={{ '--i': i } as React.CSSProperties}>
       <span className="stat-value">{value ?? '–'}</span>
       <span className="stat-label">{label}</span>
     </div>
@@ -35,19 +49,15 @@ export function AdminDialog({ selfId, onClose }: { selfId: string; onClose: () =
   const [users, setUsers] = useState<UserRow[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
   const request = useRef(0);
 
   const fail = (e: unknown) => setError(t('error', { m: (e as Error).message }));
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeRef.current();
-    document.addEventListener('keydown', onKey);
     void loadStats().then(setStats).catch(fail);
-    return () => document.removeEventListener('keydown', onKey);
   }, []);
 
+  // The latest request wins, so a slow answer for a filter the user just left is dropped.
   useEffect(() => {
     const mine = ++request.current;
     setError(null);
@@ -90,84 +100,85 @@ export function AdminDialog({ selfId, onClose }: { selfId: string; onClose: () =
     }
   };
 
-  const fmt = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-  const actionText = (s: SessionRow) => {
-    const parts = ACTIONS.filter(([k]) => (s.summary?.[k] ?? 0) > 0).map(([k, label]) => `${label.startsWith('act') ? t(label as 'actPrint') : label} ${s.summary[k]}`);
-    return parts.length ? parts.join(' · ') : t('noActions');
-  };
-  const who = (s: SessionRow) => (s.user_id ? s.profiles?.email || t('unknownUser') : t('guest'));
+  const full = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+  const actionLabel = (label: string) => (label.startsWith('act') ? t(label as 'actPrint') : label);
 
   return (
-    <div className="auth-backdrop" role="presentation" onPointerDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="auth-card wide admin" role="dialog" aria-modal="true" aria-label={t('admin')}>
-        <div className="auth-head">
-          <h2>{t('admin')}</h2>
-          <button type="button" className="auth-x" aria-label={t('close')} title={t('close')} onClick={onClose}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
-        </div>
-
-        <div className="stats">
-          <Stat label={t('statVisits')} value={stats?.visits ?? null} />
-          <Stat label={t('statDay')} value={stats?.last24h ?? null} />
-          <Stat label={t('statGuests')} value={stats?.guestVisits ?? null} />
-          <Stat label={t('statUsers')} value={stats?.users ?? null} />
-        </div>
-
-        <Segmented<Tab> kind="tab" className="fill" label={t('admin')} value={tab} onChange={setTab}
-          options={[{ value: 'sessions', label: t('adminSessions') }, { value: 'users', label: t('adminUsers') }]} />
-
-        {tab === 'sessions' && (
-          <>
-            <Segmented<SessionFilter> label={t('adminSessions')} value={filter} onChange={setFilter}
-              options={[{ value: 'all', label: t('filterAll') }, { value: 'guest', label: t('filterGuests') }, { value: 'user', label: t('filterSignedIn') }]} />
-            {sessions === null && <p className="auth-msg" role="status">{t('loading')}</p>}
-            {sessions !== null && sessions.length === 0 && !error && <p className="auth-msg">{t('noSessions')}</p>}
-            {sessions !== null && sessions.length > 0 && (
-              <Group>
-                {sessions.map((s) => (
-                  <div key={s.id} className="row admin-row">
-                    <div className="admin-line">
-                      <span className="admin-who">{who(s)}{s.user_id && s.started_as_guest ? ` · ${t('signedInDuring')}` : ''}</span>
-                      <span className="admin-when">{fmt.format(new Date(s.started_at))}</span>
-                    </div>
-                    <div className="admin-meta">
-                      {formatDuration(new Date(s.last_seen_at).getTime() - new Date(s.started_at).getTime())} · {describeAgent(s.user_agent)} · {actionText(s)}
-                    </div>
-                  </div>
-                ))}
-              </Group>
-            )}
-            {more && <button type="button" className="tool soft auth-submit" disabled={busy} onClick={() => void loadMore()}>{t('loadMore')}</button>}
-          </>
-        )}
-
-        {tab === 'users' && (
-          <>
-            {users === null && <p className="auth-msg" role="status">{t('loading')}</p>}
-            {users !== null && users.length === 0 && !error && <p className="auth-msg">{t('noUsers')}</p>}
-            {users !== null && users.length > 0 && (
-              <Group>
-                {users.map((u) => (
-                  <div key={u.id} className="row admin-row user-row">
-                    <div className="admin-user">
-                      <span className="admin-who">{u.display_name || u.email}</span>
-                      <span className="admin-meta">{u.email} · {fmt.format(new Date(u.created_at))}</span>
-                    </div>
-                    <span className={`badge ${u.role === 'admin' ? '' : 'plain'}`}>{u.role === 'admin' ? t('roleAdmin') : t('roleUser')}</span>
-                    <button type="button" className="tool soft small" disabled={busy || u.id === selfId} title={u.id === selfId ? t('cannotChangeSelf') : undefined}
-                      onClick={() => void changeRole(u, u.role === 'admin' ? 'user' : 'admin')}>
-                      {u.role === 'admin' ? t('makeUser') : t('makeAdmin')}
-                    </button>
-                  </div>
-                ))}
-              </Group>
-            )}
-          </>
-        )}
-
-        {error && <p className="auth-msg error" role="alert">{error}</p>}
+    <Dialog title={t('admin')} size="lg" onClose={onClose}>
+      <div className="stats">
+        <Stat i={0} label={t('statVisits')} value={stats?.visits ?? null} />
+        <Stat i={1} label={t('statDay')} value={stats?.last24h ?? null} />
+        <Stat i={2} label={t('statGuests')} value={stats?.guestVisits ?? null} />
+        <Stat i={3} label={t('statUsers')} value={stats?.users ?? null} />
       </div>
-    </div>
+
+      <Segmented<Tab> kind="tab" className="fill" label={t('admin')} value={tab} onChange={setTab}
+        options={[{ value: 'sessions', label: t('adminSessions') }, { value: 'users', label: t('adminUsers') }]} />
+
+      {tab === 'sessions' && (
+        <div className="view-swap" key="sessions">
+          <Segmented<SessionFilter> label={t('adminSessions')} value={filter} onChange={setFilter} className="fill"
+            options={[{ value: 'all', label: t('filterAll') }, { value: 'guest', label: t('filterGuests') }, { value: 'user', label: t('filterSignedIn') }]} />
+          {sessions === null && <Skeleton rows={4} />}
+          {sessions !== null && sessions.length === 0 && !error && <EmptyState icon="info" title={t('noSessions')} />}
+          {sessions !== null && sessions.length > 0 && (
+            <div className="pj-list">
+              {sessions.map((s, i) => {
+                const label = s.user_id ? s.profiles?.email || t('unknownUser') : t('guest');
+                const chips = ACTIONS.filter(([k]) => (s.summary?.[k] ?? 0) > 0);
+                const started = new Date(s.started_at);
+                return (
+                  <div key={s.id} className="ad-row" style={{ '--i': Math.min(i, 8) } as React.CSSProperties}>
+                    <Avatar text={label} guest={!s.user_id} />
+                    <div className="ad-text">
+                      <span className="ad-who">{label}{s.user_id && s.started_as_guest ? <em> · {t('signedInDuring')}</em> : null}</span>
+                      <span className="ad-meta">
+                        {formatDuration(new Date(s.last_seen_at).getTime() - started.getTime())} · {describeAgent(s.user_agent)}
+                      </span>
+                      <span className="chips-s">
+                        {chips.length === 0 ? <span className="chip-s none">{t('noActions')}</span> : chips.map(([k, l]) => <span key={k} className="chip-s">{actionLabel(l)} {s.summary[k]}</span>)}
+                      </span>
+                    </div>
+                    <time className="ad-when" dateTime={s.started_at} title={full.format(started)}>{relativeTime(started.getTime())}</time>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+          {more && (
+            <button type="button" className="btn block" disabled={busy} onClick={() => void loadMore()}>
+              {busy && <Spinner />}<span>{t('loadMore')}</span>
+            </button>
+          )}
+        </div>
+      )}
+
+      {tab === 'users' && (
+        <div className="view-swap" key="users">
+          {users === null && <Skeleton rows={4} />}
+          {users !== null && users.length === 0 && !error && <EmptyState icon="user" title={t('noUsers')} />}
+          {users !== null && users.length > 0 && (
+            <div className="pj-list">
+              {users.map((u, i) => (
+                <div key={u.id} className="ad-row user-row" style={{ '--i': Math.min(i, 8) } as React.CSSProperties}>
+                  <Avatar text={u.display_name || u.email || ''} />
+                  <div className="ad-text">
+                    <span className="ad-who">{u.display_name || u.email}</span>
+                    <span className="ad-meta">{u.email} · {full.format(new Date(u.created_at))}</span>
+                  </div>
+                  <span className={`role ${u.role}`}>{u.role === 'admin' ? t('roleAdmin') : t('roleUser')}</span>
+                  <button type="button" className="btn sm" disabled={busy || u.id === selfId} title={u.id === selfId ? t('cannotChangeSelf') : undefined}
+                    onClick={() => void changeRole(u, u.role === 'admin' ? 'user' : 'admin')}>
+                    {u.role === 'admin' ? t('makeUser') : t('makeAdmin')}
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && <Banner kind="error">{error}</Banner>}
+    </Dialog>
   );
 }
