@@ -58,7 +58,7 @@ export const initialState = (): AppState => ({
   nameLabel: 'Name',
   footer: '',
   paper: { id: 'A4', orientation: 'portrait' },
-  scope: 'both',
+  scope: 'question',
   dpi: 300,
   sizeMode: 'auto',
   rows: 20,
