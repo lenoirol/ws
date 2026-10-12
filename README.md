@@ -25,4 +25,8 @@ Everything above works without signing in. Creating an account (email and passwo
 
 Each visit, signed in or not, records one usage row: when it started, the browser's user agent, and counts of how many times you exported PNG or PDF, printed, shared or regenerated. The words, titles and anything else you type are never sent. Only administrators can read these rows.
 
+Signed-in users can save the current worksheet, reopen it from **My Projects**, and move several projects to the trash at once. The trash keeps them until you restore them or delete them for good.
+
+Administrators get an **Admin** entry in the account menu with the visit log (guests and signed-in users, duration, browser, export counts) and the account list, where roles can be changed. Only administrators can read this data; the database enforces it.
+
 Local development with accounts: see [supabase/README.md](supabase/README.md).

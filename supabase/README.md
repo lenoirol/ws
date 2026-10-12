@@ -49,7 +49,7 @@ Register an account in the app, then in the SQL Editor:
 update public.profiles set role = 'admin' where email = 'you@example.com';
 ```
 
-After that, admins can promote others with `select public.set_user_role('<user-id>', 'admin');`.
+After that, admins can promote or demote others from the **Admin → Users** tab in the app, or with `select public.set_user_role('<user-id>', 'admin');`.
 
 ## 4. Connect the app
 

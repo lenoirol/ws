@@ -13,6 +13,7 @@ import { Actions } from './panels/Actions.tsx';
 import { Group, Segmented } from './panels/Fields.tsx';
 import { ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
 import { AccountMenu } from './panels/AccountMenu.tsx';
+import { AdminDialog } from './panels/AdminDialog.tsx';
 import { AuthDialog } from './panels/AuthDialog.tsx';
 import { ProjectPanel, type SaveStatus } from './panels/ProjectPanel.tsx';
 import { ProjectsDialog } from './panels/ProjectsDialog.tsx';
@@ -63,6 +64,7 @@ export function App() {
   const account = useAccount();
   const [authOpen, setAuthOpen] = useState(false);
   const [projectsOpen, setProjectsOpen] = useState(false);
+  const [adminOpen, setAdminOpen] = useState(false);
   const [projectId, setProjectId] = useState<string | null>(null);
   const [projectName, setProjectName] = useState('');
   const [saving, setSaving] = useState(false);
@@ -168,7 +170,7 @@ export function App() {
         <header className="sidebar-head">
           <h1><span className="app-icon" aria-hidden="true" />{APP_NAME}</h1>
           <div className="head-actions">
-            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} />
+            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} onAdmin={() => setAdminOpen(true)} />
             <AppearanceMenu theme={s.theme} glass={s.glassStyle} setTheme={(theme) => set({ theme })} setGlass={(glassStyle) => set({ glassStyle })} icon={<ThemeIcon theme={s.theme} />} label={themeLabel} />
           </div>
         </header>
@@ -212,6 +214,7 @@ export function App() {
       </nav>
 
       {(authOpen || account.recovering) && account.enabled && <AuthDialog account={account} onClose={() => { setAuthOpen(false); if (!account.user) setPending(null); }} />}
+      {adminOpen && account.user && account.role === 'admin' && <AdminDialog selfId={account.user.id} onClose={() => setAdminOpen(false)} />}
       {projectsOpen && account.user && <ProjectsDialog onClose={() => setProjectsOpen(false)} onOpen={openProject} />}
     </div>
   );

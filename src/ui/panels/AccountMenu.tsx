@@ -3,7 +3,7 @@ import type { Account } from '../../account/useAccount.ts';
 import { t } from '../i18n.ts';
 
 /** Guests get a sign-in button; signed-in users get their initial, which opens a small account panel. */
-export function AccountMenu({ account, onSignIn }: { account: Account; onSignIn: () => void }) {
+export function AccountMenu({ account, onSignIn, onAdmin }: { account: Account; onSignIn: () => void; onAdmin: () => void }) {
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null);
 
@@ -46,6 +46,9 @@ export function AccountMenu({ account, onSignIn }: { account: Account; onSignIn:
             <span className="account-email">{email}</span>
             {account.role === 'admin' && <span className="badge">{t('roleAdmin')}</span>}
           </div>
+          {account.role === 'admin' && (
+            <button type="button" className="tool account-out" onClick={() => { setOpen(false); onAdmin(); }}>{t('admin')}</button>
+          )}
           <button type="button" className="tool account-out" onClick={() => { setOpen(false); void account.signOut(); }}>{t('signOut')}</button>
         </div>
       )}
