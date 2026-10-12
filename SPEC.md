@@ -17,16 +17,18 @@ Ba PDF mẫu là nguồn sự thật cho bố cục đầu ra. Đây là các m�
 
 ## 1. Mục tiêu
 
-- Web app tĩnh (static), chạy trên Windows, macOS, Linux, iPad, iPhone, Android bằng trình duyệt. Không server, không tài khoản, không database.
+- Web app tĩnh (static), chạy trên Windows, macOS, Linux, iPad, iPhone, Android bằng trình duyệt. Việc tạo đố, xem trước, in và xuất file chạy hoàn toàn trên trình duyệt, không cần server.
+- Tài khoản và lưu project là tính năng **tuỳ chọn**, dùng Supabase (PostgreSQL). Không đăng nhập vẫn dùng đầy đủ mọi tính năng tạo đố; đăng nhập chỉ cần khi muốn lưu project. Nếu bản build không có cấu hình backend (`VITE_SUPABASE_URL`) thì app chạy như bản chỉ-khách, không hiện nút đăng nhập.
 - Chỉ làm 2 loại đố: **Word Search** và **Word Scramble**. Không làm Crossword.
-- **Không lưu dữ liệu đầu vào**: thoát ra vào lại là trang trắng. Cấm dùng localStorage, sessionStorage, IndexedDB, cookie để lưu danh sách từ hay cài đặt. Mọi trạng thái nằm trong bộ nhớ.
+- **Không lưu dữ liệu đầu vào**: thoát ra vào lại là trang trắng. Cấm dùng localStorage, sessionStorage, IndexedDB, cookie để lưu danh sách từ hay cài đặt. Mọi trạng thái nằm trong bộ nhớ. Ngoại lệ duy nhất: thư viện Supabase giữ token phiên đăng nhập trong localStorage khi người dùng đã đăng nhập. Danh sách từ chỉ được ghi vào cơ sở dữ liệu khi người dùng đã đăng nhập và chủ động bấm Lưu project.
+- **Nhật ký phiên**: mỗi lượt truy cập (cả khách) ghi một dòng vào `work_sessions`: thời điểm, user agent và bộ đếm hành động (png, pdf, print, share, regenerate). Không bao giờ gửi danh sách từ, tiêu đề hay bất kỳ nội dung nào người dùng nhập. Chỉ admin đọc được bảng này.
 - Sản phẩm đầu ra (xem trước, in, PNG, PDF) có bố cục **giống các mẫu A, B, C** ở mục 3.
 - Lưới Word Search cho chỉnh kích thước **tự do**: số hàng và số cột độc lập, tối thiểu 5, tối đa 100 (hằng số `MAX_GRID`). Phải kiểm thử đạt yêu cầu ở 32×32 và 64×64.
 - Chỉ có 3 nút hành động chính: **Lưu PNG**, **Lưu PDF**, **In**.
 
 ## 2. Ngoài phạm vi và lưu ý bản quyền
 
-- Không làm: crossword, đăng nhập, đồng bộ đám mây, lưu dự án, lưu danh sách từ, app native.
+- Không làm: crossword, app native, lưu danh sách từ khi chưa đăng nhập.
 - Không dùng tên, logo hay câu chữ "Qualint" và "Wordsheets" trong sản phẩm. Dòng footer mặc định để trống, người dùng tự nhập. Đặt tên app ở một hằng số `APP_NAME` để dễ đổi.
 - Chỉ tái tạo định dạng chung của một tờ đố. Không sao chép mã, ảnh hay giao diện của phần mềm gốc.
 

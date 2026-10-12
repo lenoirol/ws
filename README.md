@@ -2,7 +2,7 @@
 
 Make classroom-ready **Word Search** and **Word Scramble** worksheets in your browser.
 
-Type or paste a word list, pick a style, and get a clean printable sheet with a matching answer key in seconds. Everything runs on your device: no account, no server, nothing uploaded.
+Type or paste a word list, pick a style, and get a clean printable sheet with a matching answer key in seconds. Puzzles are made on your device and the words you type are never uploaded. An account is optional and only needed to save projects.
 
 ## What you can do
 
@@ -19,3 +19,10 @@ Type or paste a word list, pick a style, and get a clean printable sheet with a 
 - Save as **PNG** (150, 300 or 600 DPI), or as a crisp vector **PDF**.
 - **Print** straight from the app with exact page sizing.
 - On phones and tablets, send the result through the system share sheet.
+## Accounts and privacy
+
+Everything above works without signing in. Creating an account (email and password, with password reset) is only needed to save projects.
+
+Each visit, signed in or not, records one usage row: when it started, the browser's user agent, and counts of how many times you exported PNG or PDF, printed, shared or regenerated. The words, titles and anything else you type are never sent. Only administrators can read these rows.
+
+Local development with accounts: see [supabase/README.md](supabase/README.md).

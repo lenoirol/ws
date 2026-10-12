@@ -280,7 +280,7 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .dir:active { transform: scale(0.92); }
 .dir.on { background: color-mix(in srgb, var(--accent) 18%, transparent); color: var(--accent); }
 
-.row input[type='text'], .row input[type='number'], .row select {
+.row input[type='text'], .row input[type='email'], .row input[type='password'], .row input[type='number'], .row select {
   appearance: none;
   -webkit-appearance: none;
   border: 0;
@@ -486,3 +486,24 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .share-menu .ico { display: block; width: 21px; height: 21px; }
 :root[data-theme='dark'] .share-menu { --glass: rgba(30, 33, 42, 0.84); --label: #fff; }
 @keyframes share-menu-in { from { opacity: 0; transform: translateY(-5px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+/* ---------- Account ---------- */
+.head-actions { display: flex; align-items: center; gap: 8px; }
+.menu-btn.initial { font-size: 15px; font-weight: 700; color: #fff; background: var(--accent); }
+.account-panel { width: 260px; }
+.account-name { padding-left: 6px; font-weight: 700; }
+.account-email { padding-left: 6px; font-size: 13px; color: var(--label2); overflow-wrap: anywhere; }
+.badge { align-self: flex-start; margin-left: 6px; padding: 2px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
+.account-out { width: 100%; background: var(--fill); }
+
+.auth-backdrop { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 16px; background: rgba(10, 20, 50, 0.38); }
+.auth-card { width: min(100%, 400px); max-height: 100%; overflow: auto; display: flex; flex-direction: column; gap: 14px; padding: 20px; border-radius: 28px; color: var(--label); background: var(--glass-solid); box-shadow: var(--glass-shadow); }
+.auth-head { display: flex; align-items: center; justify-content: space-between; }
+.auth-head h2 { font-size: 20px; font-weight: 700; }
+.auth-x { width: 32px; height: 32px; border: 0; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: var(--label); background: var(--fill); }
+.auth-msg { padding: 0 6px; font-size: 13.5px; color: var(--label2); }
+.auth-msg.error { color: var(--red); }
+.auth-submit { width: 100%; height: 48px; }
+.auth-links { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.auth-links button { border: 0; background: none; padding: 6px; font: inherit; font-size: 14px; cursor: pointer; color: var(--accent); }
+.auth-note { text-align: center; font-size: 12.5px; color: var(--label2); }

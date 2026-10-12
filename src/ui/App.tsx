@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { track } from '../account/sessionLog.ts';
+import { useAccount } from '../account/useAccount.ts';
 import { APP_NAME, MAX_WORDS } from '../core/constants.ts';
 import { randomSeed } from '../core/rng.ts';
 import type { Issue } from '../core/text.ts';
@@ -8,6 +10,8 @@ import { t } from './i18n.ts';
 import { Actions } from './panels/Actions.tsx';
 import { Group, Segmented } from './panels/Fields.tsx';
 import { ScrambleOptions, SharedOptions, WordSearchOptions } from './panels/Options.tsx';
+import { AccountMenu } from './panels/AccountMenu.tsx';
+import { AuthDialog } from './panels/AuthDialog.tsx';
 import { AppearanceMenu } from './panels/Menu.tsx';
 import { Preview } from './panels/Preview.tsx';
 import { Slider } from './panels/Fields.tsx';
@@ -52,6 +56,8 @@ function NoticeIcon({ level }: { level: 'warn' | 'info' }) {
 export function App() {
   const [s, setS] = useState<AppState>(initialState);
   const [view, setView] = useState<'input' | 'preview'>('input');
+  const account = useAccount();
+  const [authOpen, setAuthOpen] = useState(false);
   const set = (patch: Partial<AppState>) => setS((prev) => ({ ...prev, ...patch }));
   const switchTab = (tab: AppState['tab']) => withViewTransition(() => set({ tab }));
   const view$ = usePuzzle(s);
@@ -103,7 +109,10 @@ export function App() {
       <aside className="sidebar" aria-label={t('viewInput')} data-blob="self" data-blob-spec="panel">
         <header className="sidebar-head">
           <h1><span className="app-icon" aria-hidden="true" />{APP_NAME}</h1>
-          <AppearanceMenu theme={s.theme} glass={s.glassStyle} setTheme={(theme) => set({ theme })} setGlass={(glassStyle) => set({ glassStyle })} icon={<ThemeIcon theme={s.theme} />} label={themeLabel} />
+          <div className="head-actions">
+            <AccountMenu account={account} onSignIn={() => setAuthOpen(true)} />
+            <AppearanceMenu theme={s.theme} glass={s.glassStyle} setTheme={(theme) => set({ theme })} setGlass={(glassStyle) => set({ glassStyle })} icon={<ThemeIcon theme={s.theme} />} label={themeLabel} />
+          </div>
         </header>
         <div className="sidebar-scroll">
           <Segmented<AppState['tab']> kind="tab" className="fill" label={APP_NAME} value={s.tab} onChange={switchTab} options={[{ value: 'ws', label: t('tabWordSearch') }, { value: 'scramble', label: t('tabScramble') }]} />
@@ -135,11 +144,13 @@ export function App() {
         </div>
       )}
 
-      <Actions s={s} set={set} pages={view$.pages} entries={view$.entries} measure={view$.measure} regenerate={() => set({ seed: randomSeed() })} />
+      <Actions s={s} set={set} pages={view$.pages} entries={view$.entries} measure={view$.measure} regenerate={() => { track('regenerate'); set({ seed: randomSeed() }); }} />
 
       <nav className="tabbar" aria-label="View" data-blob=".seg-glass" data-adapt>
         <Segmented<'input' | 'preview'> glass label="View" value={view} onChange={setView} options={[{ value: 'input', label: t('viewInput') }, { value: 'preview', label: t('viewPreview') }]} />
       </nav>
+
+      {(authOpen || account.recovering) && account.enabled && <AuthDialog account={account} onClose={() => setAuthOpen(false)} />}
     </div>
   );
 }

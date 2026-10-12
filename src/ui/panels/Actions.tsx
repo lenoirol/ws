@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react';
+import { track } from '../../account/sessionLog.ts';
 import { APP_NAME } from '../../core/constants.ts';
 import { pagesToPngFile } from '../../export/png.ts';
 import { pagesToPdfSmart } from '../../export/pdf.ts';
@@ -123,6 +124,7 @@ export function Actions({ s, set, pages, entries, measure, regenerate }: Props) 
       }
       if (action === 'share') await shareBlob(job.blob, job.filename);
       else downloadBlob(job.blob, job.filename);
+      track(action === 'share' ? 'share' : kind);
     } catch (e) {
       setErr(t('error', { m: (e as Error).message }));
     } finally {
@@ -136,6 +138,7 @@ export function Actions({ s, set, pages, entries, measure, regenerate }: Props) 
     setErr(null);
     try {
       printPages(await allPages());
+      track('print');
     } catch (e) {
       setErr(t('error', { m: (e as Error).message }));
     } finally {

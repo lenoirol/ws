@@ -9,10 +9,15 @@
     "preview": "vite preview",
     "deploy": "node scripts/deploy.mjs",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:start": "supabase start",
+    "db:stop": "supabase stop",
+    "db:status": "supabase status",
+    "db:reset": "supabase db reset"
   },
   "dependencies": {
     "@fontsource/noto-sans": "^5.3.0",
+    "@supabase/supabase-js": "^2.117.3",
     "fflate": "^0.8.3",
     "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
@@ -23,6 +28,7 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^6.1.2",
+    "supabase": "^2.120.0",
     "typescript": "^7.0.2",
     "vite": "^8.3.3",
     "vitest": "^5.0.3"
