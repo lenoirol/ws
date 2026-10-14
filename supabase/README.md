@@ -44,7 +44,7 @@ In **Authentication**:
   switch it off unless you set up your own SMTP.
 - **Sign In / Providers → Password**: minimum length 8, to match local development.
 - **URL Configuration**:
-  - Site URL: your published address (the GitHub Pages URL).
+  - Site URL: your published address (https://phuhuynguyen.pages.dev).
   - Redirect URLs: add the same address, plus `http://localhost:5173` for local development.
 
 ## 3. Make the first admin

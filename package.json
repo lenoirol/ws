@@ -7,7 +7,6 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview",
-    "deploy": "node scripts/deploy.mjs",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "db:start": "supabase start",

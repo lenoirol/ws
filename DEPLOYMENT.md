@@ -1,15 +1,32 @@
 # Website deployment
 
-Website: https://lenoirol.github.io/Worksheet/
+Website: https://phuhuynguyen.pages.dev
 
-GitHub Pages publishes the `gh-pages` branch. Source code stays on `main`; only the production build from `dist/` is published.
+The site is a static build hosted on Cloudflare Pages, connected to the `main` branch of this repository. Every push to `main` triggers a new build and deploy.
 
-After committing changes, update the website with:
+## Pages settings
 
-```sh
-npm run deploy
-```
+| Setting | Value |
+|---|---|
+| Build command | `npm run build` |
+| Build output directory | `dist` |
+| Root directory | (empty) |
 
-This command tests, builds and pushes the web files from a temporary checkout, preserving deployment history. Git must be authenticated with permission to push to the repository. GitHub republishes when `gh-pages` changes; pushing source code to `main` alone does not update the website.
+## Environment variables
 
-Vite uses relative asset paths (`base: './'`) so assets, workers and the offline service worker work under `/Worksheet/`.
+Set these in the Pages project under **Settings → Variables and secrets** (Production). Vite reads them at build time, so changing them requires a new build:
+
+| Name | Value |
+|---|---|
+| `VITE_SUPABASE_URL` | Project URL from Supabase → Project Settings → API |
+| `VITE_SUPABASE_ANON_KEY` | The `anon` / publishable key (never the `service_role` key) |
+
+Without them the app still builds and makes puzzles, but accounts and saved projects are switched off.
+
+## Supabase
+
+In Supabase → Authentication → URL Configuration, set the Site URL to the address above and add it to the Redirect URLs.
+
+## Notes
+
+Vite uses relative asset paths (`base: './'`), so assets, workers and the offline service worker work from the site root.
