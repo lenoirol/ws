@@ -1,6 +1,6 @@
 # SPEC: Trình tạo Word Search và Word Scramble (web, chạy mọi thiết bị)
 
-Tài liệu này dành cho Claude Code. Đọc hết trước khi viết code. Làm theo từng giai đoạn ở mục 12.
+Tài liệu này dành cho người thực hiện dự án. Đọc hết trước khi viết code. Làm theo từng giai đoạn ở mục 12.
 
 ## 0. Chuẩn bị thư mục dự án
 
@@ -63,7 +63,7 @@ Số dấu gạch dưới mỗi dòng: 9, 6, 5, 3, 5, 7, 5, 6, 12, 5, 5, 7, 5, 7
 8. **Lỗi cần tránh**: mẫu C có dòng 11 là "TREAT" xáo ra đúng bằng từ gốc. App của ta phải đảm bảo bản xáo khác từ gốc.
 9. **Đáp án**: ba file mẫu không kèm đáp án. Theo mô tả của hãng, đáp án word search khoanh tròn từng từ và đánh dấu chữ đầu tiên.
 
-### Việc đầu tiên của Claude Code (Giai đoạn 0)
+### Việc đầu tiên (Giai đoạn 0)
 
 Văn bản trích từ PDF **không cho biết** font, cỡ chữ, khung viền, khoảng cách, vị trí chính xác. Hãy render 3 PDF thành ảnh (ví dụ `pdftoppm -r 100 -png`, hoặc đọc PDF trực tiếp), quan sát, rồi ghi số đo ước lượng vào `reference/NOTES.md` (tỉ lệ tiêu đề / danh sách / lưới, có khung ngoài lưới hay không, có đường kẻ ô hay không, kiểu dòng gạch của scramble, vị trí số thứ tự). Các số mặc định ở mục 7 chỉ là điểm xuất phát, phải chỉnh theo ảnh này.
 
@@ -318,7 +318,7 @@ Nếu một từ không tìm thấy, so lại với PDF mẫu A trước khi ngh
 
 Scramble mẫu C: dùng làm kiểm tra bố cục (số dòng, số gạch, thứ tự), không dùng làm kỳ vọng cho kết quả xáo vì xáo là ngẫu nhiên.
 
-## 14. Prompt khởi động cho Claude Code
+## 14. Prompt khởi động
 
 ```
 Đọc SPEC.md trong thư mục này. Thực hiện Giai đoạn 0 rồi dừng lại báo cáo, đừng sang giai đoạn sau khi chưa được đồng ý.

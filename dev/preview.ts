@@ -43,10 +43,10 @@ async function main() {
   const section = (title: string, figs: string[]) => (app.insertAdjacentHTML('beforeend', `<h2>${title}</h2><div class="row">${figs.join('')}</div>`));
 
   const wsOpts = (paper: Paper, over: Partial<WordSearchLayoutOptions> = {}): WordSearchLayoutOptions => ({
-    paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, showWords: true,
+    paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, listMode: 'words',
     listColumns: 4, style: DEFAULT_STYLE, answerSuffix: 'Answer', ...over,
   });
-  const scOpts = (paper: Paper): ScrambleLayoutOptions => ({ paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, answerSuffix: 'Answer' });
+  const scOpts = (paper: Paper): ScrambleLayoutOptions => ({ paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, answerSuffix: 'Answer', showClues: false });
 
   const A = placementsFor(WORDS_A, GRID_A, ALL_DIRS);
   const B = placementsFor(WORDS_B, GRID_B, DIR_PRESETS.easy);
