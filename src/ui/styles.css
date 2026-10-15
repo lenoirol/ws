@@ -587,8 +587,8 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .list-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 0 4px; font-size: 13px; color: var(--label2); }
 .list-head .btn.text { flex: none; padding: 4px 8px; font-size: 13.5px; }
 .pj-list { display: flex; flex-direction: column; gap: 2px; padding: 6px; border-radius: 24px; background: var(--group); }
-.pj-row, .ad-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 18px; animation: row-in 0.44s var(--spring) both; animation-delay: calc(var(--i, 0) * 32ms); transition: background-color 0.2s var(--ease); }
-.pj-row:hover, .ad-row:hover { background: var(--fill); }
+.pj-row, .adm-row { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 18px; animation: row-in 0.44s var(--spring) both; animation-delay: calc(var(--i, 0) * 32ms); transition: background-color 0.2s var(--ease); }
+.pj-row:hover, .adm-row:hover { background: var(--fill); }
 .pj-row[data-selected='1'] { background: color-mix(in srgb, var(--accent) 13%, transparent); }
 .pj-check { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; padding: 0; cursor: pointer; color: #fff; background: transparent; border: 2px solid color-mix(in srgb, var(--label2) 55%, transparent); transition: background-color 0.2s var(--ease), border-color 0.2s var(--ease), transform 0.4s var(--spring); }
 .pj-check:active { transform: scale(0.86); }
@@ -628,16 +628,16 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .stat-label { font-size: 12px; text-align: center; color: var(--label2); }
 .av { flex: none; width: 38px; height: 38px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; font-weight: 700; color: #fff; }
 .av.guest { color: var(--label2); background: var(--fill2); }
-.ad-row { align-items: flex-start; padding: 10px; }
-.ad-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-.ad-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
-.ad-who em { font-style: normal; font-weight: 400; font-size: 12.5px; color: var(--label2); }
-.ad-meta { font-size: 12.5px; color: var(--label2); overflow-wrap: anywhere; }
-.ad-when { flex: none; padding-top: 2px; font-size: 12.5px; color: var(--label2); text-align: right; white-space: nowrap; }
+.adm-row { align-items: flex-start; padding: 10px; }
+.adm-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.adm-who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.adm-who em { font-style: normal; font-weight: 400; font-size: 12.5px; color: var(--label2); }
+.adm-meta { font-size: 12.5px; color: var(--label2); overflow-wrap: anywhere; }
+.adm-when { flex: none; padding-top: 2px; font-size: 12.5px; color: var(--label2); text-align: right; white-space: nowrap; }
 .chips-s { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
 .chip-s { padding: 2px 9px; border-radius: 999px; font-size: 11.5px; font-weight: 600; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); }
 .chip-s.none { color: var(--label2); background: var(--fill); font-weight: 500; }
-.ad-row.user-row { align-items: center; }
+.adm-row.user-row { align-items: center; }
 
 /* ---------- Phones: dialogs become bottom sheets ---------- */
 @media (max-width: 560px) {
@@ -646,8 +646,8 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
   .dlg-backdrop[data-state='closing'] .dlg-card { animation-name: sheet-out; animation-duration: 0.2s; }
   .dlg-body { padding-bottom: max(22px, env(safe-area-inset-bottom)); }
   .stats { grid-template-columns: repeat(2, 1fr); }
-  .ad-row.user-row { flex-wrap: wrap; }
-  .ad-row.user-row .ad-text { flex-basis: calc(100% - 60px); }
+  .adm-row.user-row { flex-wrap: wrap; }
+  .adm-row.user-row .adm-text { flex-basis: calc(100% - 60px); }
 }
 
 @media (prefers-reduced-transparency: reduce) {
@@ -681,7 +681,7 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .user-head { display: flex; align-items: center; gap: 14px; padding: 4px; }
 .user-name { font-size: 19px; font-weight: 700; overflow-wrap: anywhere; }
 .req { border-radius: 18px; animation: row-in 0.44s var(--spring) both; animation-delay: calc(var(--i, 0) * 32ms); }
-.req .ad-row { animation: none; align-items: center; }
+.req .adm-row { animation: none; align-items: center; }
 .req-actions { flex: none; display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .req-confirm { margin: 2px 6px 8px; padding: 12px 14px; border-radius: 18px; background: color-mix(in srgb, var(--red) 9%, transparent); display: flex; flex-direction: column; gap: 10px; animation: row-in 0.3s var(--spring) both; }
 .req-confirm p { font-size: 13.5px; line-height: 1.4; }
@@ -689,7 +689,7 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .mi .count { margin-left: auto; min-width: 22px; padding: 1px 7px; border-radius: 999px; font-size: 12px; font-weight: 700; text-align: center; color: #fff; background: var(--red); }
 .mi .count + .go { margin-left: 8px; }
 @media (max-width: 560px) {
-  .req .ad-row { flex-wrap: wrap; }
+  .req .adm-row { flex-wrap: wrap; }
   .req .req-actions { width: 100%; justify-content: flex-end; }
   .user-head { flex-wrap: wrap; }
 }

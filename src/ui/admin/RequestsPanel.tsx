@@ -62,11 +62,11 @@ export function RequestsPanel({ onChanged }: { onChanged: () => void }) {
           <div className="pj-list">
             {pending.map((r, i) => (
               <div key={r.id} className="req" style={{ '--i': Math.min(i, 8) } as React.CSSProperties}>
-                <div className="ad-row">
+                <div className="adm-row">
                   <Avatar text={r.email} />
-                  <div className="ad-text">
-                    <span className="ad-who">{r.email}</span>
-                    <span className="ad-meta">{t('requestedAt', { when: formatWhen(r.requested_at) })} · <DeviceLabel ua={r.user_agent} /></span>
+                  <div className="adm-text">
+                    <span className="adm-who">{r.email}</span>
+                    <span className="adm-meta">{t('requestedAt', { when: formatWhen(r.requested_at) })} · <DeviceLabel ua={r.user_agent} /></span>
                   </div>
                   {confirming !== r.id && (
                     <span className="req-actions">
@@ -97,11 +97,11 @@ export function RequestsPanel({ onChanged }: { onChanged: () => void }) {
           <h3 className="sec-title">{t('handledTitle')}</h3>
           <div className="pj-list">
             {handled.map((r) => (
-              <div key={r.id} className="ad-row">
+              <div key={r.id} className="adm-row">
                 <Avatar text={r.email} />
-                <div className="ad-text">
-                  <span className="ad-who">{r.email}</span>
-                  <span className="ad-meta">{t('requestedAt', { when: formatWhen(r.requested_at) })}</span>
+                <div className="adm-text">
+                  <span className="adm-who">{r.email}</span>
+                  <span className="adm-meta">{t('requestedAt', { when: formatWhen(r.requested_at) })}</span>
                 </div>
                 <span className={`role ${r.status === 'approved' ? 'admin' : ''}`}>{r.status === 'approved' ? t('statusApproved') : t('statusDismissed')}</span>
               </div>

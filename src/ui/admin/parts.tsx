@@ -40,14 +40,14 @@ export function SessionItem({ s, i, showWho = true }: { s: SessionRow; i: number
   const started = new Date(s.started_at);
   const chips = ACTIONS.filter(([k]) => (s.summary?.[k] ?? 0) > 0);
   return (
-    <div className="ad-row" style={{ '--i': Math.min(i, 8) } as CSSProperties}>
+    <div className="adm-row" style={{ '--i': Math.min(i, 8) } as CSSProperties}>
       {showWho ? <Avatar text={who} guest={!s.user_id} /> : <span className="av guest"><Icon name={DEVICE_ICON[describeDevice(s.user_agent).kind]} size={18} /></span>}
-      <div className="ad-text">
-        <span className="ad-who">
+      <div className="adm-text">
+        <span className="adm-who">
           {showWho ? who : formatWhen(s.started_at)}
           {showWho && s.user_id && s.started_as_guest ? <em> · {t('signedInDuring')}</em> : null}
         </span>
-        <span className="ad-meta">
+        <span className="adm-meta">
           {showWho && <>{formatWhen(s.started_at)} · </>}
           <DeviceLabel ua={s.user_agent} /> · {formatDuration(new Date(s.last_seen_at).getTime() - started.getTime())}
         </span>

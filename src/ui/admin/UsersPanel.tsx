@@ -52,18 +52,18 @@ export function UsersPanel({ selfId, onOpenProject, onChanged }: { selfId: strin
       {shown.length > 0 && (
         <div className="pj-list">
           {shown.map((u, i) => (
-            <button key={u.id} type="button" className="ad-row user-btn" style={{ '--i': Math.min(i, 8) } as React.CSSProperties} onClick={() => setOpenId(u.id)}>
+            <button key={u.id} type="button" className="adm-row user-btn" style={{ '--i': Math.min(i, 8) } as React.CSSProperties} onClick={() => setOpenId(u.id)}>
               <Avatar text={u.display_name || u.email || ''} />
-              <span className="ad-text">
-                <span className="ad-who">{u.display_name || u.email}</span>
-                <span className="ad-meta">{u.email}</span>
-                <span className="ad-meta">
+              <span className="adm-text">
+                <span className="adm-who">{u.display_name || u.email}</span>
+                <span className="adm-meta">{u.email}</span>
+                <span className="adm-meta">
                   {u.last_seen_at ? <>{t('lastSeen', { when: formatWhen(u.last_seen_at) })} · <DeviceLabel ua={u.last_user_agent} /></> : t('neverSeen')}
                 </span>
               </span>
               <span className="user-side">
                 <span className={`role ${u.role}`}>{u.role === 'admin' ? t('roleAdmin') : t('roleUser')}</span>
-                <span className="ad-meta">{u.project_count === 1 ? t('projectsCountOne') : t('projectsCount', { n: u.project_count })}</span>
+                <span className="adm-meta">{u.project_count === 1 ? t('projectsCountOne') : t('projectsCount', { n: u.project_count })}</span>
               </span>
               <Icon name="chevron" size={18} className="pj-go" />
             </button>
@@ -146,10 +146,10 @@ function UserPage({ user, selfId, onBack, onOpenProject, onSaved }: {
 
       <div className="user-head">
         <Avatar text={label} size={56} />
-        <div className="ad-text">
+        <div className="adm-text">
           <span className="user-name">{label}</span>
-          <span className="ad-meta">{user.email}</span>
-          <span className="ad-meta">{t('joinedOn', { when: formatWhen(user.created_at) })}</span>
+          <span className="adm-meta">{user.email}</span>
+          <span className="adm-meta">{t('joinedOn', { when: formatWhen(user.created_at) })}</span>
         </div>
         <span className={`role ${user.role}`}>{user.role === 'admin' ? t('roleAdmin') : t('roleUser')}</span>
       </div>
