@@ -3,11 +3,13 @@ import { generateCrossword } from '../../src/core/crossword/generate.ts';
 import { parseEntries } from '../../src/core/text.ts';
 import type { DrawOp, Page } from '../../src/layout/drawops.ts';
 import { layoutCrossword, type CrosswordLayoutOptions } from '../../src/layout/layoutCrossword.ts';
+import { DEFAULT_FONTS } from '../../src/layout/fonts.ts';
+import { DEFAULT_CHROME } from '../../src/layout/page.ts';
 import { approxMeasure } from '../../src/layout/measure.ts';
 
 const opts = (over: Partial<CrosswordLayoutOptions> = {}): CrosswordLayoutOptions => ({
   paper: { id: 'A4', orientation: 'portrait' },
-  title: 'Animals', showName: true, nameLabel: 'Name', footer: '', font: 'Helvetica',
+  title: 'Animals', showName: true, nameLabel: 'Name', footer: '', ...DEFAULT_CHROME, listAlign: 'left', fonts: DEFAULT_FONTS,
   showLength: true, wordBank: false, answerSuffix: 'Answer',
   labels: { across: 'Across', down: 'Down', bank: 'Word Bank' },
   ...over,

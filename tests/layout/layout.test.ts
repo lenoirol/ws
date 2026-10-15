@@ -9,17 +9,19 @@ import type { DrawOp, Page } from '../../src/layout/drawops.ts';
 import { DEFAULT_STYLE, layoutWordSearch, type WordSearchLayoutOptions } from '../../src/layout/layoutWordSearch.ts';
 import { layoutScramble, type ScrambleLayoutOptions } from '../../src/layout/layoutScramble.ts';
 import { approxMeasure } from '../../src/layout/measure.ts';
-import { FONT_FAMILY, PT_MM, SIDE_MARGIN_MM, type Paper } from '../../src/layout/page.ts';
+import { DEFAULT_FONTS } from '../../src/layout/fonts.ts';
+import { DEFAULT_CHROME } from '../../src/layout/page.ts';
+import { PT_MM, SIDE_MARGIN_MM, type Paper } from '../../src/layout/page.ts';
 import { renderSvg } from '../../src/render/svg.ts';
 import { GRID_A, GRID_B, WORDS_A, WORDS_B, toGrid } from '../fixtures/samples.ts';
 
 const a4: Paper = { id: 'A4', orientation: 'portrait' };
 const ws = (over: Partial<WordSearchLayoutOptions> = {}): WordSearchLayoutOptions => ({
-  paper: a4, title: 'Halloween', showName: true, nameLabel: 'Name', footer: 'footer', font: FONT_FAMILY,
+  paper: a4, title: 'Halloween', showName: true, nameLabel: 'Name', footer: 'footer', ...DEFAULT_CHROME, listAlign: 'left', fonts: DEFAULT_FONTS,
   listMode: 'words', listColumns: 4, style: DEFAULT_STYLE, answerSuffix: 'Answer', ...over,
 });
 const sc = (over: Partial<ScrambleLayoutOptions> = {}): ScrambleLayoutOptions => ({
-  paper: a4, showClues: false, title: 'Halloween', showName: true, nameLabel: 'Name', footer: 'footer', font: FONT_FAMILY, answerSuffix: 'Answer', ...over,
+  paper: a4, showClues: false, title: 'Halloween', showName: true, nameLabel: 'Name', footer: 'footer', ...DEFAULT_CHROME, listAlign: 'left', fonts: DEFAULT_FONTS, answerSuffix: 'Answer', ...over,
 });
 
 function sample(words: string[], rows: string[], dirs: readonly Dir[]) {
@@ -63,7 +65,7 @@ function expectInsideMargins(page: Page, label: string) {
 
 const rowsOf = (page: Page, words: string[]) => {
   const byY = new Map<number, number>();
-  for (const op of page.ops) if (op.t === 'text' && words.includes(op.s) && op.anchor === 'start') byY.set(op.y, (byY.get(op.y) ?? 0) + 1);
+  for (const op of page.ops) if (op.t === 'text' && words.includes(op.s) && op.anchor === 'start' && op.weight === 400) byY.set(op.y, (byY.get(op.y) ?? 0) + 1);
   return [...byY.entries()].sort((a, b) => a[0] - b[0]).map(([, n]) => n);
 };
 

@@ -8,7 +8,6 @@ import { layoutCrossword } from '../layout/layoutCrossword.ts';
 import { layoutScramble, type ScrambleItem } from '../layout/layoutScramble.ts';
 import { layoutWordSearch, type Scope } from '../layout/layoutWordSearch.ts';
 import type { Measure } from '../layout/measure.ts';
-import { FONT_FAMILY } from '../layout/page.ts';
 import type { GeneratorClient } from './generatorClient.ts';
 import { t } from './i18n.ts';
 import { kindsOf, type AppState, type Kind } from './state.ts';
@@ -50,7 +49,7 @@ const KIND_LABEL: Record<Kind, () => string> = {
 };
 
 function layoutKind(kind: Kind, s: AppState, b: Built, measure: Measure, scope: Scope): { pages: Page[]; warnings: LayoutWarning[] } | null {
-  const common = { paper: s.paper, title: s.title, showName: s.showName, nameLabel: s.nameLabel, footer: s.footer, font: FONT_FAMILY, answerSuffix: ANSWER_SUFFIX };
+  const common = { paper: s.paper, title: s.title, showName: s.showName, nameLabel: s.nameLabel, footer: s.footer, fonts: s.fonts, cases: s.cases, titleAlign: s.titleAlign, titleScale: s.titleScale / 100, listAlign: s.listAlign, answerSuffix: ANSWER_SUFFIX };
   if (kind === 'ws') {
     if (!b.ws) return null;
     return layoutWordSearch(

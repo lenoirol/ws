@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import { startSessionLog } from '../account/sessionLog.ts';
 import { App } from './App.tsx';
 import './fonts.css';
+import './worksheetFonts.css';
 import { installLiquidGlass } from './glass.ts';
 import { installLiquidBlobs } from './liquid.ts';
 import './styles.css';

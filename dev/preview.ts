@@ -1,4 +1,5 @@
-import { FONT_FAMILY, type Paper } from '../src/layout/page.ts';
+import { DEFAULT_FONTS } from '../src/layout/fonts.ts';
+import { DEFAULT_CHROME, type Paper } from '../src/layout/page.ts';
 import { canvasMeasure } from '../src/layout/measure.ts';
 import { DEFAULT_STYLE, layoutWordSearch, type WordSearchLayoutOptions } from '../src/layout/layoutWordSearch.ts';
 import { layoutScramble, type ScrambleLayoutOptions } from '../src/layout/layoutScramble.ts';
@@ -43,10 +44,10 @@ async function main() {
   const section = (title: string, figs: string[]) => (app.insertAdjacentHTML('beforeend', `<h2>${title}</h2><div class="row">${figs.join('')}</div>`));
 
   const wsOpts = (paper: Paper, over: Partial<WordSearchLayoutOptions> = {}): WordSearchLayoutOptions => ({
-    paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, listMode: 'words',
+    paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', ...DEFAULT_CHROME, fonts: DEFAULT_FONTS, listMode: 'words',
     listColumns: 4, style: DEFAULT_STYLE, answerSuffix: 'Answer', ...over,
   });
-  const scOpts = (paper: Paper): ScrambleLayoutOptions => ({ paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', font: FONT_FAMILY, answerSuffix: 'Answer', showClues: false });
+  const scOpts = (paper: Paper): ScrambleLayoutOptions => ({ paper, title: 'Halloween', showName: true, nameLabel: 'Name', footer: '', fonts: DEFAULT_FONTS, answerSuffix: 'Answer', showClues: false });
 
   const A = placementsFor(WORDS_A, GRID_A, ALL_DIRS);
   const B = placementsFor(WORDS_B, GRID_B, DIR_PRESETS.easy);

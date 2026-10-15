@@ -1,6 +1,7 @@
 import { randomSeed } from '../core/rng.ts';
 import { ALL_DIRS, DIR_PRESETS, type Dir } from '../core/wordsearch/types.ts';
 import type { ListMode, Scope } from '../layout/layoutWordSearch.ts';
+import { DEFAULT_CASES, DEFAULT_FONTS, type Align, type PuzzleCases, type PuzzleFonts } from '../layout/fonts.ts';
 import type { Paper } from '../layout/page.ts';
 import type { FirstLetterMode } from '../core/scramble/scramble.ts';
 
@@ -36,6 +37,15 @@ export interface AppState {
   showName: boolean;
   nameLabel: string;
   footer: string;
+  /** Typeface of the title, name line, puzzle letters, word list / clues and footer. */
+  fonts: PuzzleFonts;
+  /** Upper / lower case per part. */
+  cases: PuzzleCases;
+  titleAlign: Align;
+  /** Title size in percent of the default. */
+  titleScale: number;
+  /** Placement of the word list / word bank. */
+  listAlign: Align;
   paper: Paper;
   scope: Scope;
   dpi: 150 | 300 | 600;
@@ -76,6 +86,11 @@ export const initialState = (): AppState => ({
   showName: true,
   nameLabel: 'Name',
   footer: '',
+  fonts: DEFAULT_FONTS,
+  cases: DEFAULT_CASES,
+  titleAlign: 'center',
+  titleScale: 100,
+  listAlign: 'center',
   paper: { id: 'A4', orientation: 'portrait' },
   scope: 'question',
   dpi: 300,

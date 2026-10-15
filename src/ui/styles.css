@@ -269,7 +269,7 @@ h1, h2 { font-family: 'SF Pro Display', 'SF Pro Text', -apple-system, BlinkMacSy
 .row + .row::before { content: ''; position: absolute; top: 0; left: 16px; right: 0; border-top: 0.5px solid var(--sep); }
 .row-wide { display: block; padding-top: 10px; padding-bottom: 10px; }
 .row-label { flex: none; }
-.row-control { display: flex; justify-content: flex-end; min-width: 0; flex: 1; }
+.row-control { display: flex; justify-content: flex-end; gap: 8px; min-width: 0; flex: 1; }
 .count { color: var(--label2); font-size: 13px; min-height: 36px; }
 .chips { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; }
 .chip { border: 0; height: 34px; padding: 0 15px; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--label); background: var(--fill); transition: transform 0.4s var(--spring), background-color 0.2s; }

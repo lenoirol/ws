@@ -4,6 +4,7 @@ import { parseEntries, type Entry, type Issue } from '../core/text.ts';
 import type { WordSearchResult } from '../core/wordsearch/types.ts';
 import type { LayoutWarning, Page } from '../layout/drawops.ts';
 import { canvasMeasure, type Measure } from '../layout/measure.ts';
+import { loadPageFonts, pagesFontsReady } from './fontLoader.ts';
 import { GeneratorClient, type Progress } from './generatorClient.ts';
 import { generateOptions, layoutFor, scrambleItemsFor } from './pipeline.ts';
 import { kindsOf, type AppState } from './state.ts';
@@ -25,7 +26,9 @@ export interface PuzzleView {
 }
 
 export function usePuzzle(s: AppState): PuzzleView {
-  const measure = useMemo<Measure>(() => canvasMeasure(), []);
+  // Text widths are cached per font, so a new measure starts once the typefaces on the page have loaded.
+  const [fontEpoch, setFontEpoch] = useState(0);
+  const measure = useMemo<Measure>(() => canvasMeasure(), [fontEpoch]);
   const parsed = useMemo(() => parseEntries(s.text), [s.text]);
 
   const kinds = kindsOf(s);
@@ -98,7 +101,7 @@ export function usePuzzle(s: AppState): PuzzleView {
   // Crossword building is quick and seeded, so it runs in step with the typing rather than in the worker.
   const cw = useMemo(() => (needsCw ? generateCrossword(parsed.entries, { seed: s.seed }) : null), [needsCw, parsed.entries, s.seed]);
 
-  const layoutKey = JSON.stringify([s.tab, s.combo, s.title, s.showName, s.nameLabel, s.footer, s.paper, s.scope, s.listMode, s.listColumns, s.scrambleClues, s.frame, s.cellLines, s.boldLetters, s.cwShowLength, s.cwWordBank]);
+  const layoutKey = JSON.stringify([s.tab, s.combo, s.title, s.showName, s.nameLabel, s.footer, s.fonts, s.cases, s.titleAlign, s.titleScale, s.listAlign, s.paper, s.scope, s.listMode, s.listColumns, s.scrambleClues, s.frame, s.cellLines, s.boldLetters, s.cwShowLength, s.cwWordBank]);
   const laid = useMemo(() => {
     const built = {
       ws: needsWs && parsed.entries.length ? ws : null,
@@ -108,6 +111,15 @@ export function usePuzzle(s: AppState): PuzzleView {
     return layoutFor(s, built, measure);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measure, needsWs, needsScr, needsCw, ws, scrambleItems, cw, parsed.entries.length, layoutKey]);
+
+  useEffect(() => {
+    if (pagesFontsReady(laid.pages)) return;
+    let live = true;
+    void loadPageFonts(laid.pages).then(() => live && setFontEpoch((n) => n + 1));
+    return () => {
+      live = false;
+    };
+  }, [laid.pages]);
 
   const issues: Issue[] = [...parsed.issues];
   if (needsWs && ws) {

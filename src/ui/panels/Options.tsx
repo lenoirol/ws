@@ -1,5 +1,6 @@
 import { MAX_COPIES, MAX_GRID, MIN_GRID } from '../../core/constants.ts';
 import { ALL_DIRS, DIR_PRESETS, type Dir } from '../../core/wordsearch/types.ts';
+import { FONT_ROLES, FONTS, fontStack, uniformFonts, type Align, type FontRole, type TextCase } from '../../layout/fonts.ts';
 import { t } from '../i18n.ts';
 import { KIDS_PRESET, type AppState, type ComboId } from '../state.ts';
 import { Disclosure, Group, Row, Segmented, Slider, SwitchRow } from './Fields.tsx';
@@ -163,12 +164,86 @@ export function ComboOptions({ s, set }: Props) {
   );
 }
 
+const FONT_LABEL: Record<FontRole, () => string> = {
+  title: () => t('fontTitle'),
+  name: () => t('fontName'),
+  puzzle: () => t('fontPuzzle'),
+  list: () => t('fontList'),
+  footer: () => t('fontFooter'),
+};
+
+function FontSelect({ value, onChange, mixed = false }: { value: string; onChange: (id: string) => void; mixed?: boolean }) {
+  return (
+    <select value={mixed ? '' : value} onChange={(e) => onChange(e.target.value)} style={mixed ? undefined : { fontFamily: fontStack(value) }}>
+      {mixed && <option value="" disabled>{t('fontMixed')}</option>}
+      {FONTS.map((f) => (
+        <option key={f.id} value={f.id} style={{ fontFamily: fontStack(f.id) }}>{f.id}</option>
+      ))}
+    </select>
+  );
+}
+
+const CASE_OPTIONS = (): { value: TextCase; label: string }[] => [
+  { value: 'none', label: t('caseAsTyped') },
+  { value: 'upper', label: 'AA' },
+  { value: 'lower', label: 'aa' },
+];
+
+function CaseSelect({ value, onChange, mixed = false }: { value: TextCase; onChange: (c: TextCase) => void; mixed?: boolean }) {
+  return (
+    <select aria-label={t('caseUpper')} value={mixed ? '' : value} onChange={(e) => onChange(e.target.value as TextCase)}>
+      {mixed && <option value="" disabled>{t('fontMixed')}</option>}
+      {CASE_OPTIONS().map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+    </select>
+  );
+}
+
+const alignOptions = (): { value: Align; label: string }[] => [
+  { value: 'left', label: t('alignLeft') },
+  { value: 'center', label: t('alignCenter') },
+  { value: 'right', label: t('alignRight') },
+];
+
+/** One typeface per part of the sheet, plus a shortcut that sets them all. */
+function FontOptions({ s, set }: Props) {
+  const first = s.fonts[FONT_ROLES[0]];
+  const same = FONT_ROLES.every((r) => s.fonts[r] === first);
+  return (
+    <Disclosure title={t('fontsGroup')}>
+      <Row label={t('fontAll')}>
+        <FontSelect value={first} mixed={!same} onChange={(id) => set({ fonts: uniformFonts(id) })} />
+        <CaseSelect
+          value={s.cases[FONT_ROLES[0]]}
+          mixed={!FONT_ROLES.every((r) => s.cases[r] === s.cases[FONT_ROLES[0]])}
+          onChange={(c) => set({ cases: Object.fromEntries(FONT_ROLES.map((r) => [r, c])) as AppState['cases'] })}
+        />
+      </Row>
+      {FONT_ROLES.map((r) => (
+        <Row key={r} label={FONT_LABEL[r]()}>
+          <FontSelect value={s.fonts[r]} onChange={(id) => set({ fonts: { ...s.fonts, [r]: id } })} />
+          <CaseSelect value={s.cases[r]} onChange={(c) => set({ cases: { ...s.cases, [r]: c } })} />
+        </Row>
+      ))}
+      <div className="row row-wide">
+        <Segmented label={t('listAlign')} value={s.listAlign} onChange={(v) => set({ listAlign: v })} options={alignOptions()} />
+      </div>
+      <p className="pp-hint">{t('fontsHint')}</p>
+    </Disclosure>
+  );
+}
+
 export function SharedOptions({ s, set }: Props) {
   return (
     <>
       <Group title={t('pageGroup')}>
         <Row label={t('titleLabel')}>
           <input type="text" value={s.title} placeholder="Optional" onChange={(e) => set({ title: e.target.value })} />
+        </Row>
+        <div className="row row-wide">
+          <Segmented label={t('titleAlign')} value={s.titleAlign} onChange={(v) => set({ titleAlign: v })} options={alignOptions()} />
+        </div>
+        <Row label={`${t('titleSize')} ${s.titleScale}%`}>
+          <Slider label={t('titleSize')} min={50} max={200} step={5} value={s.titleScale} onChange={(v) => set({ titleScale: v })} />
         </Row>
         <SwitchRow label={t('showName')} checked={s.showName} onChange={(v) => set({ showName: v })} />
         {s.showName && (
@@ -186,6 +261,7 @@ export function SharedOptions({ s, set }: Props) {
           <Select value={s.paper.orientation} onChange={(v) => set({ paper: { ...s.paper, orientation: v as AppState['paper']['orientation'] } })} options={[{ value: 'portrait', label: t('portrait') }, { value: 'landscape', label: t('landscape') }]} />
         </Row>
       </Group>
+      <FontOptions s={s} set={set} />
       <Disclosure title={t('advanced')}>
         <Row label={t('copies')}>
           <input type="number" min={1} max={MAX_COPIES} value={s.copies} onChange={(e) => set({ copies: Math.max(1, Math.min(MAX_COPIES, Math.floor(Number(e.target.value)) || 1)) })} />

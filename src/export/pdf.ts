@@ -33,7 +33,7 @@ export async function pagesToPdf(pages: readonly Page[], dpi: number, title: str
   return new Blob([bytes as BlobPart], { type: 'application/pdf' });
 }
 
-/** Vector PDF with standard Helvetica; falls back to an image PDF if a character cannot be encoded. */
+/** Vector PDF with standard Helvetica; falls back to an image PDF for other typefaces or characters that cannot be encoded. */
 export async function pagesToPdfSmart(pages: readonly Page[], dpi: number, title: string): Promise<{ blob: Blob; vector: boolean }> {
   try {
     const { buildVectorPdf } = await import('./pdfVector.ts');

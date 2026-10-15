@@ -9,6 +9,7 @@ import type { Entry } from '../../core/text.ts';
 import type { Page } from '../../layout/drawops.ts';
 import type { Measure } from '../../layout/measure.ts';
 import type { Scope } from '../../layout/layoutWordSearch.ts';
+import { loadPageFonts } from '../fontLoader.ts';
 import { GeneratorClient } from '../generatorClient.ts';
 import { t } from '../i18n.ts';
 import { Segmented } from './Fields.tsx';
@@ -114,6 +115,7 @@ export function Actions({ s, set, pages, entries, measure, regenerate }: Props) 
     setNote(null);
     try {
       const all = await allPages();
+      await loadPageFonts(all);
       setStep(null);
       let job: Job;
       if (kind === 'png') job = await pagesToPngFile(all, s.dpi, base);

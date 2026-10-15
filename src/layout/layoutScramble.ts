@@ -1,6 +1,7 @@
 import type { ScrambledEntry } from '../core/scramble/scramble.ts';
 import type { DrawOp, LayoutWarning, Page } from './drawops.ts';
 import type { Measure } from './measure.ts';
+import { applyCase } from './fonts.ts';
 import { chromeOps, emptyPage, INK, PT_MM, SIDE_MARGIN_MM, type ChromeOptions, type Paper } from './page.ts';
 import { fitText } from './fitText.ts';
 import type { Scope } from './layoutWordSearch.ts';
@@ -55,9 +56,9 @@ function drawBlock(
   const withClues = o.showClues && items.some((it) => it.clue);
   // With clue lines each entry takes two lines, so the main line is slightly smaller.
   const textPt = clamp(rowMm * (REF_TEXT_PT / REF_ROW_MM) * (withClues ? 0.8 : 1), 9, 16.5);
-  const maxText = items.reduce((m, it) => Math.max(m, measure(scrambledText(it.scrambled), textPt, 400, o.font)), 0);
+  const maxText = items.reduce((m, it) => Math.max(m, measure(applyCase(scrambledText(it.scrambled), o.cases.puzzle), textPt, 400, o.fonts.puzzle)), 0);
   const maxSlots = items.reduce((m, it) => Math.max(m, slotCount(it.scrambled)), 1);
-  const numW = measure('00.', textPt, 400, o.font);
+  const numW = measure('00.', textPt, 400, o.fonts.puzzle);
 
   const numRight = block.single ? W / 2 - 62.3 : block.x0 + numW;
   const textX = numRight + 1.6;
@@ -70,9 +71,9 @@ function drawBlock(
   items.forEach((it, i) => {
     const y = firstBaseline + i * rowMm;
     const push = (x: number, s: string, weight: 400 | 700, anchor: 'start' | 'middle' | 'end', size = textPt) =>
-      ops.push({ t: 'text', x, y, s, size, weight, anchor, font: o.font, color: INK });
+      ops.push({ t: 'text', x, y, s, size, weight, anchor, font: o.fonts.puzzle, color: INK });
     push(numRight, `${firstNumber + i}.`, 400, 'end');
-    push(textX, scrambledText(it.scrambled), 400, 'start');
+    push(textX, applyCase(scrambledText(it.scrambled), o.cases.puzzle), 400, 'start');
 
     let k = 0;
     it.scrambled.answer.forEach((word, wi) => {
@@ -81,15 +82,15 @@ function drawBlock(
         const cx = dashStart + k * slot + dashLen / 2;
         ops.push({ t: 'line', x1: cx - dashLen / 2, y1: y + 0.67, x2: cx + dashLen / 2, y2: y + 0.67, w: dashW, color: INK });
         const hinted = it.scrambled.hints[wi]?.[ci] === true;
-        if (mode === 'answer') push(cx, ch, 700, 'middle');
-        else if (hinted) push(cx, ch, 700, 'middle');
+        if (mode === 'answer') push(cx, applyCase(ch, o.cases.puzzle), 700, 'middle');
+        else if (hinted) push(cx, applyCase(ch, o.cases.puzzle), 700, 'middle');
         k++;
       });
     });
 
     if (withClues && it.clue) {
-      const clue = fitText(measure, it.clue, textPt * 0.62, block.x1 - textX, o.font, 6);
-      ops.push({ t: 'text', x: textX, y: y + textPt * 0.62 * PT_MM + 1.6, s: clue.text, size: clue.pt, weight: 400, anchor: 'start', font: o.font, color: INK });
+      const clue = fitText(measure, applyCase(it.clue, o.cases.list), textPt * 0.62, block.x1 - textX, o.fonts.list, 6);
+      ops.push({ t: 'text', x: textX, y: y + textPt * 0.62 * PT_MM + 1.6, s: clue.text, size: clue.pt, weight: 400, anchor: 'start', font: o.fonts.list, color: INK });
     }
   });
 }

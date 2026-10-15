@@ -1,5 +1,6 @@
 import { PDFDocument, rgb, StandardFonts, type PDFFont, type PDFPage } from 'pdf-lib';
 import type { DrawOp, Page } from '../layout/drawops.ts';
+import { DEFAULT_FONT } from '../layout/fonts.ts';
 import { capsulePath } from '../render/shapes.ts';
 
 const K = 72 / 25.4; // mm to pt
@@ -13,10 +14,14 @@ function color(hex: string) {
 
 /**
  * Draws DrawOp[] as vector PDF. Text uses the standard Helvetica fonts that every PDF reader
- * provides, so nothing needs embedding. Characters outside WinAnsi make pdf-lib throw; the
- * caller falls back to an image PDF in that case.
+ * provides, so nothing needs embedding. Characters outside WinAnsi make pdf-lib throw, and so does
+ * a page that uses another typeface (it cannot be reproduced without embedding it); the caller
+ * falls back to an image PDF in both cases.
  */
 export async function buildVectorPdf(pages: readonly Page[], title: string): Promise<Uint8Array> {
+  for (const page of pages) {
+    for (const op of page.ops) if (op.t === 'text' && op.font !== DEFAULT_FONT) throw new Error(`Font "${op.font}" is not a standard PDF font`);
+  }
   const doc = await PDFDocument.create();
   doc.setTitle(title);
   const regular = await doc.embedFont(StandardFonts.Helvetica);

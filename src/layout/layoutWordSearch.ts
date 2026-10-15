@@ -1,8 +1,9 @@
 import { DIR_VECTORS, type Grid, type Placement } from '../core/wordsearch/types.ts';
 import type { DrawOp, LayoutWarning, Page } from './drawops.ts';
+import { applyCase, fontInfo } from './fonts.ts';
 import type { Measure } from './measure.ts';
 import { fitText } from './fitText.ts';
-import { chromeOps, emptyPage, INK, PT_MM, SIDE_MARGIN_MM, type ChromeOptions, type Paper } from './page.ts';
+import { alignTitleTo, alignX, ANCHOR, chromeOps, emptyPage, INK, PT_MM, SIDE_MARGIN_MM, type ChromeOptions, type Paper } from './page.ts';
 
 export interface WordSearchStyle {
   frame: boolean;
@@ -96,12 +97,12 @@ export function layoutWordSearchPage(
   const rows = input.grid.length;
   const cols = (input.grid[0] ?? []).length;
   const title = mode_ === 'answer' && o.answerSuffix ? (o.title ? `${o.title} – ${o.answerSuffix}` : o.answerSuffix) : o.title;
-  const { headerBottom } = chromeOps(page, { ...o, title }, TITLE_PT, measure);
+  const { headerBottom, titleOp } = chromeOps(page, { ...o, title }, TITLE_PT, measure);
 
   // The word list determines the height left for the grid.
   const mode: ListMode = mode_ === 'answer' && o.listMode === 'clues' ? 'both' : o.listMode;
-  const words = mode === 'none' ? [] : input.placements.map((p) => entryLabel(p.entry.display, p.entry.clue, mode));
-  const list = words.length ? planList(words, o.listColumns, mode !== 'words', W, H, o.font, measure) : null;
+  const words = mode === 'none' ? [] : input.placements.map((p) => applyCase(entryLabel(p.entry.display, p.entry.clue, mode), o.cases.list));
+  const list = words.length ? planList(words, o.listColumns, mode !== 'words', W, H, o.fonts.list, measure) : null;
   if (list && !list.fits) warnings.push({ kind: 'listTooLarge' });
   const lastBaselineLimit = H - (o.footer ? 24.6 : 15);
   const listBlock = list ? list.pitchMm * (0.9 + (list.rows - 1)) : 0;
@@ -113,6 +114,7 @@ export function layoutWordSearchPage(
   const gridH = cell * rows;
   const x0 = (W - gridW) / 2;
   const y0 = headerBottom;
+  alignTitleTo(titleOp, o.titleAlign, x0, x0 + gridW, W, measure);
 
   const letterPt = (letterRatio(cell) * cell) / PT_MM;
   if (letterPt < SMALL_SEVERE_PT) warnings.push({ kind: 'smallFont', pt: letterPt, level: 'severe' });
@@ -134,12 +136,12 @@ export function layoutWordSearchPage(
       ops.push({
         t: 'text',
         x: x0 + (c + 0.5) * cell,
-        y: y0 + (r + 0.5) * cell + 0.355 * letterPt * PT_MM,
-        s: ch,
+        y: y0 + (r + 0.5) * cell + fontInfo(o.fonts.puzzle).capHalf * letterPt * PT_MM,
+        s: applyCase(ch, o.cases.puzzle),
         size: letterPt,
         weight,
         anchor: 'middle',
-        font: o.font,
+        font: o.fonts.puzzle,
         color: INK,
       });
     });
@@ -168,19 +170,20 @@ export function layoutWordSearchPage(
   }
 
   if (list) {
-    const colPitch = (W - 2 * SIDE_MARGIN_MM) / list.cols;
+    // The list sits under the frame, so its columns share the frame's edges.
+    const colPitch = gridW / list.cols;
     const firstBaseline = y0 + gridH + 0.9 * list.pitchMm;
     words.forEach((w, i) => {
-      const fit = fitText(measure, w, list.pt, colPitch - 4, o.font, LIST_MIN_PT);
+      const fit = fitText(measure, w, list.pt, colPitch - 4, o.fonts.list, LIST_MIN_PT);
       ops.push({
         t: 'text',
-        x: SIDE_MARGIN_MM + (i % list.cols) * colPitch,
+        x: alignX(o.listAlign, x0 + (i % list.cols) * colPitch, x0 + (i % list.cols) * colPitch + colPitch - 4),
         y: firstBaseline + Math.floor(i / list.cols) * list.pitchMm,
         s: fit.text,
         size: fit.pt,
         weight: 400,
-        anchor: 'start',
-        font: o.font,
+        anchor: ANCHOR[o.listAlign],
+        font: o.fonts.list,
         color: INK,
       });
     });

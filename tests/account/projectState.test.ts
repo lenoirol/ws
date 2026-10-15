@@ -44,4 +44,12 @@ describe('project state', () => {
     const base = initialState();
     for (const bad of [null, undefined, 'x', 3, ['a']]) expect(fromSaved(bad, base)).toBe(base);
   });
+
+  it('keeps chosen fonts and replaces unknown ones', () => {
+    const base = initialState();
+    const saved = JSON.parse(JSON.stringify(toSaved({ ...base, fonts: { ...base.fonts, title: 'Nunito', puzzle: 'JetBrains Mono' } })));
+    expect(fromSaved(saved, base).fonts).toMatchObject({ title: 'Nunito', puzzle: 'JetBrains Mono', name: 'Helvetica' });
+    const odd = fromSaved({ fonts: { title: 'Comic Sans', name: 7, list: 'Lexend' } }, base);
+    expect(odd.fonts).toMatchObject({ title: 'Helvetica', name: 'Helvetica', list: 'Lexend' });
+  });
 });
