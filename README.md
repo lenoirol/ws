@@ -2,7 +2,7 @@
 
 A small web app for making printable word puzzles for the classroom: **word search**, **word scramble** and **crossword**. Paste a word list, pick a style, and you get a clean worksheet plus an answer key.
 
-Live site: https://phuhuynguyen.pages.dev
+Live site: https://phuhuy.live
 
 ## What it does
 
@@ -49,4 +49,4 @@ supabase     database migrations and setup notes
 dev          preview page used while tuning the layout
 ```
 
-More: [SPEC.md](SPEC.md) is the original design spec, [DEPLOYMENT.md](DEPLOYMENT.md) covers publishing on Cloudflare Pages, and `reference/NOTES.md` has the measurements taken from the sample PDFs.
+More: [SPEC.md](SPEC.md) is the original design spec, [DEPLOYMENT.md](DEPLOYMENT.md) covers publishing on GitHub Pages, and `reference/NOTES.md` has the measurements taken from the sample PDFs.
